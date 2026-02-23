@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Вебинар: Как получить больше клиентов бьюти-мастеру</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rose: #e8b4b8;
+      --rose-dark: #c9959a;
+      --gold: #d4af37;
+      --cream: #faf6f2;
+      --charcoal: #2d2a26;
+      --soft-pink: #f5e6e8;
+      --shadow: 0 4px 30px rgba(45, 42, 38, 0.08);
+      --radius: 16px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--cream);
+      color: var(--charcoal);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Decorative background */
+    .bg-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: 
+        radial-gradient(ellipse 80% 50% at 50% -20%, var(--soft-pink) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, rgba(232, 180, 184, 0.2) 0%, transparent 40%),
+        radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 30%);
+      z-index: -1;
+    }
+
+    /* Header */
+    header {
+      padding: 1.5rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--charcoal);
+    }
+
+    .logo span {
+      color: var(--gold);
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 3rem 1.5rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--rose) 0%, var(--rose-dark) 100%);
+      color: white;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      animation: fadeUp 0.8s ease;
+    }
+
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      font-weight: 600;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+      animation: fadeUp 0.8s ease 0.1s both;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--rose-dark);
+    }
+
+    .hero-subtitle {
+      font-size: 1.1rem;
+      color: #5a5652;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.8s ease 0.2s both;
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Benefits section */
+    .benefits {
+      padding: 4rem 1.5rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .benefits h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 3rem;
+      color: var(--charcoal);
+    }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .benefit-card {
+      background: white;
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      border: 1px solid rgba(232, 180, 184, 0.2);
+    }
+
+    .benefit-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 40px rgba(45, 42, 38, 0.12);
+    }
+
+    .benefit-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--soft-pink) 0%, var(--rose) 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      margin-bottom: 1rem;
+    }
+
+    .benefit-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+      color: var(--charcoal);
+    }
+
+    .benefit-card p {
+      font-size: 0.9rem;
+      color: #5a5652;
+    }
+
+    /* Form section */
+    .form-section {
+      padding: 4rem 1.5rem;
+    }
+
+    .form-wrapper {
+      max-width: 480px;
+      margin: 0 auto;
+      background: white;
+      padding: 2.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(232, 180, 184, 0.3);
+    }
+
+    .form-wrapper h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.75rem;
+      text-align: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .form-wrapper .subtitle {
+      text-align: center;
+      color: #5a5652;
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+      color: var(--charcoal);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      border: 1px solid #e0dcd8;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--rose);
+      box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.2);
+    }
+
+    .form-group input::placeholder {
+      color: #a8a4a0;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, var(--rose-dark) 0%, var(--rose) 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(201, 149, 154, 0.4);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .form-note {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #8a8682;
+      margin-top: 1rem;
+    }
+
+    /* Success message */
+    .success-message {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    .success-message .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .success-message h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .success-message p {
+      color: #5a5652;
+    }
+
+    .form-content {
+      transition: opacity 0.3s ease;
+    }
+
+    .form-content.hidden {
+      display: none;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      font-size: 0.85rem;
+      color: #8a8682;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      header {
+        padding: 1rem;
+      }
+
+      .hero {
+        min-height: auto;
+        padding: 2rem 1rem;
+      }
+
+      .form-wrapper {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-pattern"></div>
+
+  <header>
+    <div class="logo">Beauty<span>Pro</span></div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <span class="hero-badge">Бесплатный вебинар</span>
+      <h1>Как получить <em>больше клиентов</em> бьюти-мастеру</h1>
+      <p class="hero-subtitle">Проверенные стратегии продвижения в Instagram, сарафанное радио и удержание клиентов — всё в одном вебинаре</p>
+    </section>
+
+    <section class="benefits">
+      <h2>Что вы узнаете на вебинаре</h2>
+      <div class="benefits-grid">
+        <div class="benefit-card">
+          <div class="benefit-icon">📱</div>
+          <h3>Продвижение в Instagram</h3>
+          <p>Как вести контент, чтобы к вам приходили новые клиенты без рекламного бюджета</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">💬</div>
+          <h3>Сарафанное радио</h3>
+          <p>Простые приёмы, чтобы клиенты рекомендовали вас друзьям и знакомым</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">💝</div>
+          <h3>Удержание клиентов</h3>
+          <p>Как сделать так, чтобы клиенты возвращались к вам снова и снова</p>
+        </div>
+        <div class="benefit-card">
+          <div class="benefit-icon">💰</div>
+          <h3>Увеличение среднего чека</h3>
+          <p>Тактичные способы повысить доход без потери доверия клиентов</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="form-section">
+      <div class="form-wrapper">
+        <div class="form-content" id="formContent">
+          <h2>Запишитесь на вебинар</h2>
+          <p class="subtitle">Оставьте заявку — пришлём ссылку и напоминание</p>
+          <form id="registrationForm">
+            <div class="form-group">
+              <label for="name">Ваше имя *</label>
+              <input type="text" id="name" name="name" placeholder="Как к вам обращаться?" required>
+            </div>
+            <div class="form-group">
+              <label for="email">Email *</label>
+              <input type="email" id="email" name="email" placeholder="example@mail.ru" required>
+            </div>
+            <div class="form-group">
+              <label for="phone">Телефон</label>
+              <input type="tel" id="phone" name="phone" placeholder="+7 (999) 123-45-67">
+            </div>
+            <button type="submit" class="btn-submit">Записаться на вебинар</button>
+            <p class="form-note">Нажимая кнопку, вы соглашаетесь с политикой конфиденциальности</p>
+          </form>
+        </div>
+        <div class="success-message" id="successMessage">
+          <div class="icon">✨</div>
+          <h3>Вы успешно записаны!</h3>
+          <p>Проверьте почту — мы отправили вам ссылку на вебинар и напоминание.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    © 2025 BeautyPro. Вебинар для бьюти-мастеров.
+  </footer>
+
+  <script>
+    document.getElementById('registrationForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const phone = document.getElementById('phone').value.trim();
+
+      // Здесь можно добавить отправку на сервер (например, через fetch)
+      console.log('Заявка:', { name, email, phone });
+
+      // Показываем сообщение об успехе
+      document.getElementById('formContent').classList.add('hidden');
+      document.getElementById('successMessage').classList.add('show');
+    });
+  </script>
+</body>
+</html>
