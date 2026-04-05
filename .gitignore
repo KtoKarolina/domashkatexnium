@@ -17,3 +17,4 @@ star-oracle/node_modules/
 star-oracle/dist/
 .env
 .env.local
+star-oracle/.env.server
