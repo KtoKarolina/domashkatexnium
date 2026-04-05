@@ -1,0 +1,22 @@
+Если при двойном клике по push-now.bat ничего не происходит:
+
+1. ПРАВЫЙ клик по push-now.bat -> "Запуск от имени администратора"
+   (или "Run as administrator")
+
+2. Или откройте CMD вручную:
+   - Нажмите Win+R
+   - Введите: cmd
+   - Enter
+   - Скопируйте и вставьте по очереди:
+
+cd /d "c:\Users\Asus\OneDrive\Рабочий стол\domashkatexnium"
+git add .
+git commit -m "Initial commit"
+git remote remove origin
+git remote add origin https://github.com/KtoKarolina/myproject.git
+git branch -M main
+git push -u origin main
+
+3. OneDrive может блокировать .bat в синхронизируемых папках.
+   Скопируйте папку domashkatexnium на диск C: (например C:\domashkatexnium)
+   и запустите push-now.bat оттуда.

@@ -3,20 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Вебинар: Как получить больше клиентов бьюти-мастеру</title>
+  <meta name="description" content="KARO.AI — AI-видео, мультики и реклама для бизнеса. За 2 дня и в 5 раз дешевле студии. Профессиональный контент для брендов.">
+  <title>KARO.AI — AI-креатор контента для бизнеса</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --rose: #e8b4b8;
-      --rose-dark: #c9959a;
-      --gold: #d4af37;
-      --cream: #faf6f2;
-      --charcoal: #2d2a26;
-      --soft-pink: #f5e6e8;
-      --shadow: 0 4px 30px rgba(45, 42, 38, 0.08);
+      --bg: #0a0a0f;
+      --bg-card: #14141a;
+      --bg-card-hover: #1a1a24;
+      --text: #f0f0f5;
+      --text-muted: #8888a0;
+      --accent-purple: #8b5cf6;
+      --accent-blue: #06b6d4;
+      --accent-pink: #ec4899;
+      --accent-orange: #f59e0b;
+      --accent-teal: #14b8a6;
+      --border: rgba(255, 255, 255, 0.08);
+      --gradient-1: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%);
+      --gradient-2: linear-gradient(135deg, #ec4899 0%, #f59e0b 100%);
       --radius: 16px;
+      --radius-sm: 12px;
     }
 
     * {
@@ -25,195 +33,699 @@
       box-sizing: border-box;
     }
 
+    html {
+      scroll-behavior: smooth;
+    }
+
     body {
-      font-family: 'Montserrat', sans-serif;
-      background: var(--cream);
-      color: var(--charcoal);
+      font-family: 'Manrope', sans-serif;
+      background: var(--bg);
+      color: var(--text);
       line-height: 1.6;
       overflow-x: hidden;
     }
 
-    /* Decorative background */
-    .bg-pattern {
+    /* Nav */
+    header {
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      background: 
-        radial-gradient(ellipse 80% 50% at 50% -20%, var(--soft-pink) 0%, transparent 50%),
-        radial-gradient(circle at 90% 80%, rgba(232, 180, 184, 0.2) 0%, transparent 40%),
-        radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.08) 0%, transparent 30%);
-      z-index: -1;
-    }
-
-    /* Header */
-    header {
-      padding: 1.5rem 2rem;
+      right: 0;
+      z-index: 100;
+      padding: 1rem 2rem;
+      background: rgba(10, 10, 15, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
     }
 
     .logo {
-      font-family: 'Cormorant Garamond', serif;
       font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--charcoal);
+      font-weight: 700;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    .logo span {
-      color: var(--gold);
+    nav {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    nav a:hover {
+      color: var(--text);
+    }
+
+    .btn-cta {
+      background: var(--accent-purple);
+      color: white !important;
+      padding: 0.6rem 1.25rem;
+      border-radius: 50px;
+      font-weight: 600;
+    }
+
+    .btn-cta:hover {
+      background: #7c3aed;
+      filter: brightness(1.1);
+    }
+
+    .nav-toggle {
+      display: none;
     }
 
     /* Hero */
     .hero {
-      min-height: 85vh;
+      min-height: 100vh;
+      padding: 8rem 2rem 4rem;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
-      padding: 3rem 1.5rem;
-      max-width: 900px;
+      max-width: 1000px;
       margin: 0 auto;
     }
 
     .hero-badge {
       display: inline-block;
-      background: linear-gradient(135deg, var(--rose) 0%, var(--rose-dark) 100%);
-      color: white;
+      background: rgba(139, 92, 246, 0.2);
+      color: #a78bfa;
       padding: 0.4rem 1rem;
       border-radius: 50px;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
       margin-bottom: 1.5rem;
-      animation: fadeUp 0.8s ease;
+      border: 1px solid rgba(139, 92, 246, 0.3);
     }
 
     .hero h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2.2rem, 5vw, 3.5rem);
-      font-weight: 600;
-      line-height: 1.2;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 700;
+      line-height: 1.15;
       margin-bottom: 1rem;
-      animation: fadeUp 0.8s ease 0.1s both;
+      letter-spacing: -0.02em;
     }
 
-    .hero h1 em {
-      font-style: italic;
-      color: var(--rose-dark);
+    .hero h1 .gradient {
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .hero-subtitle {
-      font-size: 1.1rem;
-      color: #5a5652;
+      font-size: 1.25rem;
+      color: var(--text-muted);
       margin-bottom: 2rem;
-      animation: fadeUp 0.8s ease 0.2s both;
+      max-width: 600px;
     }
 
-    @keyframes fadeUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    /* Industry tags */
+    .niches {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 2.5rem;
     }
 
-    /* Benefits section */
-    .benefits {
-      padding: 4rem 1.5rem;
-      max-width: 1100px;
-      margin: 0 auto;
+    .niche-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      transition: all 0.2s;
     }
 
-    .benefits h2 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2rem;
+    .niche-tag:hover {
+      border-color: var(--accent-purple);
+      color: var(--text);
+      background: rgba(139, 92, 246, 0.1);
+    }
+
+    /* CTA buttons */
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .btn-primary {
+      padding: 1rem 2rem;
+      background: var(--accent-purple);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.15);
+      transform: translateY(-2px);
+    }
+
+    .btn-outline {
+      padding: 1rem 2rem;
+      background: transparent;
+      color: var(--text);
+      border: 2px solid var(--border);
+      border-radius: 50px;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-outline:hover {
+      border-color: var(--accent-purple);
+      color: var(--accent-purple);
+    }
+
+    /* Stats */
+    .hero-stats {
+      display: flex;
+      gap: 3rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .stat {
       text-align: center;
-      margin-bottom: 3rem;
-      color: var(--charcoal);
     }
 
-    .benefits-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.5rem;
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent-blue);
+      margin-bottom: 0.25rem;
     }
 
-    .benefit-card {
-      background: white;
-      padding: 2rem;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-      border: 1px solid rgba(232, 180, 184, 0.2);
+    .stat-label {
+      font-size: 0.9rem;
+      color: var(--text-muted);
     }
 
-    .benefit-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 40px rgba(45, 42, 38, 0.12);
+    /* Portfolio link */
+    .portfolio-link {
+      position: absolute;
+      top: 8rem;
+      right: 2rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.2s;
     }
 
-    .benefit-icon {
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, var(--soft-pink) 0%, var(--rose) 100%);
-      border-radius: 12px;
+    .portfolio-link:hover {
+      color: var(--accent-blue);
+    }
+
+    /* Urgency badge */
+    .urgency-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(34, 197, 94, 0.15);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+      color: #22c55e;
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+
+    .urgency-badge::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      animation: pulse-dot 1.5s infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Sticky CTA bar */
+    .sticky-cta {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(10, 10, 15, 0.98);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding: 0.75rem 1.5rem;
+      display: none;
+      justify-content: center;
+      gap: 0.75rem;
+      z-index: 99;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+    }
+
+    .sticky-cta.visible {
+      display: flex;
+    }
+
+    .sticky-cta .btn-primary {
+      padding: 0.75rem 1.5rem;
+      font-size: 0.95rem;
+    }
+
+    .sticky-cta .telegram-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: #0088cc;
+      color: white;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+
+    .sticky-cta .telegram-btn:hover {
+      background: #0099e6;
+      transform: translateY(-2px);
+    }
+
+    /* Trust bar */
+    .trust-bar {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.4rem;
+      gap: 2rem;
+      flex-wrap: wrap;
+      padding: 1.5rem 1rem;
+      background: rgba(255,255,255,0.02);
+      border-radius: var(--radius);
+      margin-bottom: 2rem;
+      border: 1px solid var(--border);
+    }
+
+    .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .trust-item svg {
+      flex-shrink: 0;
+      color: var(--accent-teal);
+    }
+
+    /* Quick contact buttons */
+    .quick-contact {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+
+    .quick-contact a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.25rem;
+      border-radius: 50px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .quick-contact .tg {
+      background: #0088cc;
+      color: white;
+      border: none;
+    }
+
+    .quick-contact .tg:hover {
+      background: #0099e6;
+      transform: translateY(-2px);
+    }
+
+    .quick-contact .ig {
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .quick-contact .ig:hover {
+      border-color: var(--accent-pink);
+      color: var(--accent-pink);
+    }
+
+    /* Telegram button (reusable) */
+    a.telegram-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      background: #0088cc;
+      color: white !important;
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: var(--radius);
+      transition: all 0.2s;
+    }
+
+    a.telegram-btn:hover {
+      background: #0099e6;
+      transform: translateY(-2px);
+    }
+
+    /* Sections */
+    section {
+      padding: 5rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      scroll-margin-top: 80px;
+    }
+
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 1rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 3rem;
+      font-size: 1.1rem;
+    }
+
+    /* Works / Service cards */
+    .works-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+    }
+
+    .work-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .work-card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(139, 92, 246, 0.3);
+      transform: translateY(-4px);
+    }
+
+    .work-card:nth-child(1) .work-icon { background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%); }
+    .work-card:nth-child(2) .work-icon { background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%); }
+    .work-card:nth-child(3) .work-icon { background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%); }
+    .work-card:nth-child(4) .work-icon { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); }
+
+    .work-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+      margin: 0 auto 1.25rem;
+    }
+
+    .work-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .work-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* Why AI */
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    .why-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      transition: all 0.3s;
+    }
+
+    .why-card:hover {
+      border-color: rgba(6, 182, 212, 0.3);
+    }
+
+    .why-card .icon {
+      font-size: 2.5rem;
       margin-bottom: 1rem;
     }
 
-    .benefit-card h3 {
-      font-family: 'Cormorant Garamond', serif;
+    .why-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .why-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Prices */
+    .prices-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .price-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .price-card.featured {
+      border-color: var(--accent-purple);
+      background: linear-gradient(180deg, rgba(139, 92, 246, 0.1) 0%, var(--bg-card) 100%);
+    }
+
+    .price-card h3 {
       font-size: 1.25rem;
       margin-bottom: 0.5rem;
-      color: var(--charcoal);
     }
 
-    .benefit-card p {
-      font-size: 0.9rem;
-      color: #5a5652;
+    .price-card .price {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 1rem 0;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
-    /* Form section */
-    .form-section {
-      padding: 4rem 1.5rem;
+    .price-card ul {
+      list-style: none;
+      text-align: left;
+      margin: 1.5rem 0;
     }
 
-    .form-wrapper {
-      max-width: 480px;
-      margin: 0 auto;
-      background: white;
-      padding: 2.5rem;
+    .price-card li {
+      padding: 0.5rem 0;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .price-card li::before {
+      content: "✓";
+      color: var(--accent-teal);
+      font-weight: bold;
+    }
+
+    /* Reviews */
+    .reviews-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .review-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(232, 180, 184, 0.3);
+      padding: 1.5rem;
+      position: relative;
     }
 
-    .form-wrapper h2 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.75rem;
+    .review-card::before {
+      content: '"';
+      font-size: 4rem;
+      color: var(--accent-purple);
+      opacity: 0.3;
+      position: absolute;
+      top: 0.5rem;
+      left: 1rem;
+      font-family: Georgia, serif;
+    }
+
+    .review-text {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .review-author {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .review-role {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    /* How to order */
+    .steps {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .step {
+      flex: 1;
+      min-width: 200px;
+      max-width: 250px;
       text-align: center;
+    }
+
+    .step-num {
+      width: 48px;
+      height: 48px;
+      background: var(--gradient-1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      margin: 0 auto 1rem;
+    }
+
+    .step h4 {
+      font-size: 1.1rem;
       margin-bottom: 0.5rem;
     }
 
-    .form-wrapper .subtitle {
-      text-align: center;
-      color: #5a5652;
-      font-size: 0.95rem;
+    .step p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    /* Contact */
+    .contact-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    .contact-info h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .contact-info p {
+      color: var(--text-muted);
       margin-bottom: 2rem;
+    }
+
+    .instagram-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .instagram-btn:hover {
+      border-color: var(--accent-pink);
+      color: var(--accent-pink);
+    }
+
+    .contact-form {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
     }
 
     .form-group {
@@ -222,210 +734,463 @@
 
     .form-group label {
       display: block;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 500;
-      margin-bottom: 0.4rem;
-      color: var(--charcoal);
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 0.9rem 1rem;
-      border: 1px solid #e0dcd8;
-      border-radius: 10px;
-      font-family: inherit;
-      font-size: 1rem;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .form-group input:focus {
-      outline: none;
-      border-color: var(--rose);
-      box-shadow: 0 0 0 3px rgba(232, 180, 184, 0.2);
-    }
-
-    .form-group input::placeholder {
-      color: #a8a4a0;
-    }
-
-    .btn-submit {
-      width: 100%;
-      padding: 1rem 1.5rem;
-      background: linear-gradient(135deg, var(--rose-dark) 0%, var(--rose) 100%);
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-family: inherit;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .btn-submit:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(201, 149, 154, 0.4);
-    }
-
-    .btn-submit:active {
-      transform: translateY(0);
-    }
-
-    .form-note {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #8a8682;
-      margin-top: 1rem;
-    }
-
-    /* Success message */
-    .success-message {
-      display: none;
-      text-align: center;
-      padding: 2rem;
-    }
-
-    .success-message.show {
-      display: block;
-    }
-
-    .success-message .icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-
-    .success-message h3 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.5rem;
       margin-bottom: 0.5rem;
     }
 
-    .success-message p {
-      color: #5a5652;
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+      transition: border-color 0.2s;
     }
 
-    .form-content {
-      transition: opacity 0.3s ease;
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent-purple);
     }
 
-    .form-content.hidden {
-      display: none;
+    .form-group textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* Policy notice */
+    .policy-notice {
+      background: rgba(139, 92, 246, 0.08);
+      border: 1px solid rgba(139, 92, 246, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 1rem 1.25rem;
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .policy-notice strong {
+      color: var(--text);
     }
 
     /* Footer */
     footer {
       text-align: center;
-      padding: 2rem 1.5rem;
-      font-size: 0.85rem;
-      color: #8a8682;
+      padding: 2rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
     }
 
     /* Responsive */
-    @media (max-width: 600px) {
+    @media (max-width: 1024px) {
+      .works-grid { grid-template-columns: repeat(2, 1fr); }
+      .why-grid { grid-template-columns: 1fr; }
+      .prices-grid { grid-template-columns: 1fr; }
+      .contact-wrap { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
       header {
-        padding: 1rem;
+        position: relative;
+        flex-wrap: wrap;
+      }
+
+      nav {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: rgba(10, 10, 15, 0.98);
+        padding: 1.5rem;
+        gap: 1rem;
+        border-bottom: 1px solid var(--border);
+        width: 100%;
+      }
+
+      nav.open {
+        display: flex;
+      }
+
+      .nav-toggle {
+        display: block;
+        background: none;
+        border: none;
+        color: var(--text);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0.25rem;
       }
 
       .hero {
-        min-height: auto;
-        padding: 2rem 1rem;
+        padding-top: 6rem;
       }
 
-      .form-wrapper {
-        padding: 1.5rem;
+      .portfolio-link {
+        position: static;
+        margin-top: 1rem;
       }
+
+      .works-grid { grid-template-columns: 1fr; }
+      .hero-stats { gap: 2rem; }
+      .trust-bar { gap: 1rem; }
+      .sticky-cta { flex-wrap: wrap; padding: 0.6rem 1rem; }
     }
   </style>
 </head>
 <body>
-  <div class="bg-pattern"></div>
-
   <header>
-    <div class="logo">Beauty<span>Pro</span></div>
+    <a href="#" class="logo">KARO.AI</a>
+    <nav>
+      <a href="#works">Работы</a>
+      <a href="#why">Почему AI?</a>
+      <a href="#prices">Цены</a>
+      <a href="#training">Обучение</a>
+      <a href="#reviews">Отзывы</a>
+      <a href="#how">Как заказать</a>
+      <a href="#contact">Контакт</a>
+      <a href="#contact" class="btn-cta">Написать</a>
+    </nav>
+    <button class="nav-toggle" aria-label="Меню">☰</button>
   </header>
 
   <main>
     <section class="hero">
-      <span class="hero-badge">Бесплатный вебинар</span>
-      <h1>Как получить <em>больше клиентов</em> бьюти-мастеру</h1>
-      <p class="hero-subtitle">Проверенные стратегии продвижения в Instagram, сарафанное радио и удержание клиентов — всё в одном вебинаре</p>
-    </section>
+      <a href="https://instagram.com/tabor_love_" target="_blank" rel="noopener" class="portfolio-link">Полное портфолио → @tabor_love_</a>
 
-    <section class="benefits">
-      <h2>Что вы узнаете на вебинаре</h2>
-      <div class="benefits-grid">
-        <div class="benefit-card">
-          <div class="benefit-icon">📱</div>
-          <h3>Продвижение в Instagram</h3>
-          <p>Как вести контент, чтобы к вам приходили новые клиенты без рекламного бюджета</p>
+      <span class="hero-badge">AI-Креатор контента</span>
+      <h1>Контент, который <span class="gradient">захватывает внимание</span></h1>
+      <p class="hero-subtitle">AI-видео, мультики и реклама — за 2 дня и в 5 раз дешевле студии. Профессиональный контент для бизнеса.</p>
+
+      <div class="trust-bar">
+        <span class="trust-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Только B2B-контент
+        </span>
+        <span class="trust-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          Ответ в течение 24 часов
+        </span>
+        <span class="trust-item">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+          50+ успешных проектов
+        </span>
+      </div>
+
+      <div class="niches">
+        <span class="niche-tag">☕️ Кафе и рестораны</span>
+        <span class="niche-tag">🛍️ Магазины и маркетплейсы</span>
+        <span class="niche-tag">💄 Бьюти и уход</span>
+        <span class="niche-tag">🏋️ Фитнес и спорт</span>
+        <span class="niche-tag">📚 Онлайн-школы</span>
+        <span class="niche-tag">🏠 Недвижимость</span>
+        <span class="niche-tag">✈️ Туризм</span>
+        <span class="niche-tag">👤 Личный бренд</span>
+      </div>
+
+      <div class="hero-buttons">
+        <a href="#contact" class="btn-primary">Бесплатная консультация</a>
+        <a href="#works" class="btn-outline">Смотреть работы</a>
+      </div>
+
+      <div class="quick-contact">
+        <a href="https://t.me/tabor_love" target="_blank" rel="noopener" class="tg">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+          Написать в Telegram
+        </a>
+        <a href="https://instagram.com/tabor_love_" target="_blank" rel="noopener" class="ig">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          Портфолио в Instagram
+        </a>
+      </div>
+
+      <span class="urgency-badge">Ответ в течение 24 часов • Бесплатная оценка проекта</span>
+
+      <div class="hero-stats">
+        <div class="stat">
+          <div class="stat-value">50+</div>
+          <div class="stat-label">Проектов</div>
         </div>
-        <div class="benefit-card">
-          <div class="benefit-icon">💬</div>
-          <h3>Сарафанное радио</h3>
-          <p>Простые приёмы, чтобы клиенты рекомендовали вас друзьям и знакомым</p>
+        <div class="stat">
+          <div class="stat-value">2 дня</div>
+          <div class="stat-label">Срок</div>
         </div>
-        <div class="benefit-card">
-          <div class="benefit-icon">💝</div>
-          <h3>Удержание клиентов</h3>
-          <p>Как сделать так, чтобы клиенты возвращались к вам снова и снова</p>
-        </div>
-        <div class="benefit-card">
-          <div class="benefit-icon">💰</div>
-          <h3>Увеличение среднего чека</h3>
-          <p>Тактичные способы повысить доход без потери доверия клиентов</p>
+        <div class="stat">
+          <div class="stat-value">×5</div>
+          <div class="stat-label">Дешевле студии</div>
         </div>
       </div>
     </section>
 
-    <section class="form-section">
-      <div class="form-wrapper">
-        <div class="form-content" id="formContent">
-          <h2>Запишитесь на вебинар</h2>
-          <p class="subtitle">Оставьте заявку — пришлём ссылку и напоминание</p>
-          <form id="registrationForm">
+    <section id="works">
+      <h2 class="section-title">Работы</h2>
+      <p class="section-subtitle">Мультики, видео, реклама и фото — всё создано с AI для бизнеса</p>
+      <div class="works-grid">
+        <a href="https://instagram.com/tabor_love_" target="_blank" rel="noopener" class="work-card">
+          <div class="work-icon">🎬</div>
+          <h3>Мультики</h3>
+          <p>AI-анимация и мультфильмы для брендов</p>
+        </a>
+        <a href="https://instagram.com/tabor_love_" target="_blank" rel="noopener" class="work-card">
+          <div class="work-icon">📹</div>
+          <h3>Видео</h3>
+          <p>Короткие ролики для соцсетей и сайтов</p>
+        </a>
+        <a href="https://instagram.com/tabor_love_" target="_blank" rel="noopener" class="work-card">
+          <div class="work-icon">📢</div>
+          <h3>Реклама</h3>
+          <p>Рекламные креативы с AI-визуалом</p>
+        </a>
+        <a href="https://instagram.com/tabor_love_" target="_blank" rel="noopener" class="work-card">
+          <div class="work-icon">🖼️</div>
+          <h3>Фото</h3>
+          <p>AI-фотографии и иллюстрации</p>
+        </a>
+      </div>
+      <p style="text-align: center; margin-top: 2rem; color: var(--text-muted);">Все работы публикую в Instagram — смотри актуальное портфолио:</p>
+      <div style="display: flex; justify-content: center; margin-top: 1rem;">
+        <a href="https://instagram.com/tabor_love_" target="_blank" rel="noopener" class="instagram-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          @tabor_love_
+        </a>
+      </div>
+    </section>
+
+    <section id="why">
+      <h2 class="section-title">Почему AI?</h2>
+      <p class="section-subtitle">Скорость, цена и качество — преимущества AI-контента для вашего бизнеса</p>
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="icon">⚡</div>
+          <h3>Быстро</h3>
+          <p>Готовый контент за 2 дня вместо 2 недель в студии. Идеально для срочных кампаний и тестов.</p>
+        </div>
+        <div class="why-card">
+          <div class="icon">💰</div>
+          <h3>Выгодно</h3>
+          <p>В 5 раз дешевле классической студии при сопоставимом визуальном качестве для рекламы и соцсетей.</p>
+        </div>
+        <div class="why-card">
+          <div class="icon">🎯</div>
+          <h3>Под задачу</h3>
+          <p>Создаём контент под вашу нишу и бренд. Фокус на B2B: кафе, бьюти, фитнес, образование, недвижимость.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="prices">
+      <h2 class="section-title">Цены</h2>
+      <p class="section-subtitle">Прозрачные тарифы под разные задачи</p>
+      <div class="prices-grid">
+        <div class="price-card">
+          <h3>Старт</h3>
+          <div class="price">от 5 000 ₽</div>
+          <ul>
+            <li>Короткое видео до 30 сек</li>
+            <li>1–2 правки</li>
+            <li>Срок: 2–3 дня</li>
+          </ul>
+          <a href="#contact" class="btn-outline" style="display: inline-block; text-align: center;">Заказать</a>
+        </div>
+        <div class="price-card featured">
+          <h3>Бизнес</h3>
+          <div class="price">от 15 000 ₽</div>
+          <ul>
+            <li>Видео или мультик до 1 мин</li>
+            <li>До 5 правок</li>
+            <li>Срок: 2 дня</li>
+            <li>Приоритетная очередь</li>
+          </ul>
+          <a href="#contact" class="btn-primary" style="display: inline-block; text-align: center;">Заказать</a>
+        </div>
+        <div class="price-card">
+          <h3>Премиум</h3>
+          <div class="price">от 30 000 ₽</div>
+          <ul>
+            <li>Комплекс: видео + креативы</li>
+            <li>Безлимит правок</li>
+            <li>Срок: 3–5 дней</li>
+            <li>Консультация по контенту</li>
+          </ul>
+          <a href="#contact" class="btn-outline" style="display: inline-block; text-align: center;">Заказать</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="training">
+      <h2 class="section-title">Обучение</h2>
+      <p class="section-subtitle">Научитесь создавать AI-контент сами — для личного бренда или агентства</p>
+      <div class="why-card" style="max-width: 600px; margin: 0 auto;">
+        <p>Провожу индивидуальные и групповые мастер-классы по созданию AI-видео и анимации. Подробности и запись — по запросу в форме ниже.</p>
+        <a href="#contact" class="btn-primary" style="display: inline-block; margin-top: 1rem;">Узнать об обучении</a>
+      </div>
+    </section>
+
+    <section id="reviews">
+      <h2 class="section-title">Отзывы</h2>
+      <p class="section-subtitle">Что говорят заказчики</p>
+      <div class="reviews-grid">
+        <div class="review-card">
+          <p class="review-text">Заказала ролик для Instagram своей кофейни. Сделали за 2 дня, выглядит профессионально. Клиенты спрашивают, где снимали — не верят, что это AI.</p>
+          <div class="review-author">Мария К.</div>
+          <div class="review-role">Владелица кофейни</div>
+        </div>
+        <div class="review-card">
+          <p class="review-text">Нужна была реклама для онлайн-школы. По цене студии даже не рассматривали — здесь в разы дешевле, качество для соцсетей отличное.</p>
+          <div class="review-author">Дмитрий В.</div>
+          <div class="review-role">Основатель образовательного проекта</div>
+        </div>
+        <div class="review-card">
+          <p class="review-text">Используем для бьюти-бренда. Видео и картинки под наш стиль. Быстро реагируют на правки. Рекомендую для малого бизнеса.</p>
+          <div class="review-author">Анна С.</div>
+          <div class="review-role">Маркетолог, бьюти-ниша</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how">
+      <h2 class="section-title">Как заказать</h2>
+      <p class="section-subtitle">Простой процесс от заявки до результата</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h4>Оставьте заявку</h4>
+          <p>Опишите задачу, нишу и сроки в форме ниже</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h4>Обсудим детали</h4>
+          <p>Согласуем сценарий, стиль и правки</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h4>Получите результат</h4>
+          <p>Готовый контент в согласованные сроки</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact">
+      <h2 class="section-title">Контакт</h2>
+      <p class="section-subtitle">Напишите — обсудим ваш проект</p>
+      <div class="contact-wrap">
+        <div class="contact-info">
+          <h3>Связаться со мной</h3>
+          <p>Оставьте заявку — отвечу в течение 24 часов с оценкой стоимости. Или напишите напрямую в Telegram — отвечаю быстрее.</p>
+          <a href="https://t.me/tabor_love" target="_blank" rel="noopener" class="telegram-btn" style="margin-bottom: 0.75rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+            Написать в Telegram
+          </a>
+          <a href="https://instagram.com/tabor_love_" target="_blank" rel="noopener" class="instagram-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            @tabor_love_
+          </a>
+        </div>
+        <div class="contact-form">
+          <div class="form-header">
+            <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 1rem;">Оставьте заявку — отвечу в течение 24 часов с оценкой стоимости</p>
+          </div>
+          <form id="contactForm">
             <div class="form-group">
-              <label for="name">Ваше имя *</label>
+              <label for="taskType">Что вам нужно? *</label>
+              <select id="taskType" name="taskType" required style="width: 100%; padding: 1rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: inherit; font-size: 1rem; cursor: pointer;">
+                <option value="">Выберите тип контента</option>
+                <option value="Видео для соцсетей">Видео для соцсетей</option>
+                <option value="AI-мультик / анимация">AI-мультик / анимация</option>
+                <option value="Рекламные креативы">Рекламные креативы</option>
+                <option value="AI-фото / иллюстрации">AI-фото / иллюстрации</option>
+                <option value="Комплекс (несколько типов)">Комплекс (несколько типов)</option>
+                <option value="Узнать стоимость">Узнать стоимость</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="name">Имя *</label>
               <input type="text" id="name" name="name" placeholder="Как к вам обращаться?" required>
             </div>
             <div class="form-group">
-              <label for="email">Email *</label>
-              <input type="email" id="email" name="email" placeholder="example@mail.ru" required>
+              <label for="email">Email или Telegram *</label>
+              <input type="text" id="email" name="email" placeholder="example@mail.ru или @username" required>
             </div>
             <div class="form-group">
-              <label for="phone">Телефон</label>
-              <input type="tel" id="phone" name="phone" placeholder="+7 (999) 123-45-67">
+              <label for="message">Опишите задачу</label>
+              <textarea id="message" name="message" placeholder="Ниша бизнеса, сроки, пожелания по стилю..."></textarea>
             </div>
-            <button type="submit" class="btn-submit">Записаться на вебинар</button>
-            <p class="form-note">Нажимая кнопку, вы соглашаетесь с политикой конфиденциальности</p>
+            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;">Получить бесплатную оценку</button>
           </form>
-        </div>
-        <div class="success-message" id="successMessage">
-          <div class="icon">✨</div>
-          <h3>Вы успешно записаны!</h3>
-          <p>Проверьте почту — мы отправили вам ссылку на вебинар и напоминание.</p>
+          <div class="policy-notice">
+            <strong>Политика контента:</strong> Работаю только с коммерческим контентом для бизнеса. Детский контент и контент 18+ не создаю.
+          </div>
         </div>
       </div>
     </section>
   </main>
 
   <footer>
-    © 2025 BeautyPro. Вебинар для бьюти-мастеров.
+    © 2025 KARO.AI — AI-креатор контента для бизнеса. Профессиональный контент без детской и взрослой тематики.
   </footer>
 
-  <script>
-    document.getElementById('registrationForm').addEventListener('submit', function(e) {
-      e.preventDefault();
+  <div class="sticky-cta" id="stickyCta">
+    <a href="https://t.me/tabor_love" target="_blank" rel="noopener" class="telegram-btn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+      Написать в Telegram
+    </a>
+    <a href="#contact" class="btn-primary">Оставить заявку</a>
+  </div>
 
+  <script>
+    document.getElementById('contactForm').addEventListener('submit', function(e) {
+      e.preventDefault();
       const name = document.getElementById('name').value.trim();
       const email = document.getElementById('email').value.trim();
-      const phone = document.getElementById('phone').value.trim();
+      const message = document.getElementById('message').value.trim();
+      const taskType = document.getElementById('taskType')?.value || '';
+      // Здесь: отправка на сервер (fetch к API, Telegram Bot и т.д.)
+      const fullMessage = taskType ? taskType + '\n\n' + message : message;
+      console.log('Заявка:', { name, email, message: fullMessage });
+      // Вариант: открыть Telegram с презаполненным сообщением
+      // window.open('https://t.me/tabor_love?text=' + encodeURIComponent('Привет! Меня зовут ' + name + '. ' + fullMessage), '_blank');
+      alert('Спасибо! Я свяжусь с вами в течение 24 часов.');
+      this.reset();
+    });
 
-      // Здесь можно добавить отправку на сервер (например, через fetch)
-      console.log('Заявка:', { name, email, phone });
+    document.querySelector('.nav-toggle').addEventListener('click', function() {
+      document.querySelector('nav').classList.toggle('open');
+    });
 
-      // Показываем сообщение об успехе
-      document.getElementById('formContent').classList.add('hidden');
-      document.getElementById('successMessage').classList.add('show');
+    // Sticky CTA: показывать после прокрутки мимо hero
+    const stickyCta = document.getElementById('stickyCta');
+    const hero = document.querySelector('.hero');
+    const contactSection = document.getElementById('contact');
+
+    function toggleStickyCta() {
+      if (!stickyCta || !hero) return;
+      const heroBottom = hero.offsetTop + hero.offsetHeight;
+      const contactTop = contactSection ? contactSection.getBoundingClientRect().top : Infinity;
+      if (window.scrollY > heroBottom - 100 && contactTop > 150) {
+        stickyCta.classList.add('visible');
+      } else {
+        stickyCta.classList.remove('visible');
+      }
+    }
+
+    window.addEventListener('scroll', toggleStickyCta);
+    window.addEventListener('resize', toggleStickyCta);
+
+    // Закрывать мобильное меню при клике на ссылку
+    document.querySelectorAll('nav a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        if (window.innerWidth <= 768) {
+          document.querySelector('nav').classList.remove('open');
+        }
+      });
     });
   </script>
 </body>
