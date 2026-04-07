@@ -14,6 +14,7 @@ export function ForecastPage() {
     typeof localStorage !== 'undefined' ? readProfilePrefs() : { showLucky: true, showAvoid: true },
   )
   const [state, setState] = useState({ loading: true, error: null, forecast: null })
+  const [ai, setAi] = useState({ loading: false, error: null, data: null })
 
   useEffect(() => {
     setPrefs(readProfilePrefs())
@@ -27,6 +28,19 @@ export function ForecastPage() {
       try {
         const { forecast } = await api.fetchDailyForecast(user.id)
         if (!cancelled) setState({ loading: false, error: null, forecast })
+
+        if (forecast && !cancelled) {
+          const birth = await api.fetchPrimaryBirth(user.id)
+          if (birth?.date && !cancelled) {
+            setAi({ loading: true, error: null, data: null })
+            try {
+              const pred = await api.fetchAIPrediction(birth.date)
+              if (!cancelled) setAi({ loading: false, error: null, data: pred })
+            } catch {
+              if (!cancelled) setAi({ loading: false, error: null, data: null })
+            }
+          }
+        }
       } catch (e) {
         if (!cancelled)
           setState({ loading: false, error: e?.message ?? String(e), forecast: null })
@@ -70,6 +84,25 @@ export function ForecastPage() {
         {f ? (
           <>
             <p className="mb-4 text-xs text-star-rose/90 md:text-sm">{f.vedicHint}</p>
+
+            {ai.data?.prediction ? (
+              <Card className="mb-5 border-star-gold/25">
+                <h3 className="font-display mb-2 text-base text-star-gold">
+                  ✨ AI-прогноз · {ai.data.sign}
+                </h3>
+                <p className="text-sm leading-relaxed text-purple-50 md:text-base">
+                  {ai.data.prediction}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-3 text-xs text-purple-200">
+                  <span>🍀 Число: <strong className="text-star-gold">{ai.data.luckyNumber}</strong></span>
+                  <span>🎨 Цвет: <strong className="text-star-gold">{ai.data.color}</strong></span>
+                </div>
+              </Card>
+            ) : ai.loading ? (
+              <Card className="mb-5">
+                <p className="text-purple-200">✨ Загрузка AI-прогноза…</p>
+              </Card>
+            ) : null}
 
             <Card className="mb-5">
               <p className="text-sm leading-relaxed text-purple-50 md:text-base">{f.mainText}</p>

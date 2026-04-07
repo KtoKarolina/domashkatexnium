@@ -16,6 +16,12 @@ Thumbs.db
 star-oracle/frontend/node_modules/
 star-oracle/frontend/dist/
 star-oracle/dist/
+
+# Backend
+star-oracle/backend/node_modules/
+star-oracle/backend/.env
+star-oracle/backend/.env.server
+
+# General env
 .env
 .env.local
-star-oracle/backend/.env.server

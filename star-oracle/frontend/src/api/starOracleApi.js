@@ -1,6 +1,8 @@
 import { supabase, assertSupabaseConfigured } from '../supabaseClient.js'
 import { generateDailyForecast } from '../forecastGenerator.js'
 
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
+
 export function localDateISO() {
   const d = new Date()
   const y = d.getFullYear()
@@ -135,4 +137,39 @@ export async function deleteUserStoredReadings(userId) {
     if (error) errors.push(`${table}: ${error.message}`)
   }
   if (errors.length) throw new Error(errors.join('; '))
+}
+
+// ─── Backend API (Express + OpenAI) ───────────────────────
+
+export async function fetchAIPrediction(birthDate) {
+  const res = await fetch(`${API_BASE}/api/prediction?birthDate=${encodeURIComponent(birthDate)}`)
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function createSubscriber(email, birthDate) {
+  const res = await fetch(`${API_BASE}/api/subscribers`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, birthDate }),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
+  }
+  return res.json()
+}
+
+export async function fetchSubscriber(email) {
+  const res = await fetch(`${API_BASE}/api/subscribers?email=${encodeURIComponent(email)}`)
+  if (res.status === 404) return null
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
+  }
+  const data = await res.json()
+  return data.subscriber
 }
