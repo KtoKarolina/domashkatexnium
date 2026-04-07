@@ -12,9 +12,10 @@ Thumbs.db
 *.tmp
 *.log
 
-# Node / Vite (star-oracle)
-star-oracle/node_modules/
+# Node / Vite (frontend)
+star-oracle/frontend/node_modules/
+star-oracle/frontend/dist/
 star-oracle/dist/
 .env
 .env.local
-star-oracle/.env.server
+star-oracle/backend/.env.server
