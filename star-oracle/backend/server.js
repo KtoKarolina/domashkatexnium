@@ -39,6 +39,11 @@ const COLORS = [
   'коралловый', 'аметистовый', 'жемчужный', 'бронзовый',
 ]
 
+function internalError(res, logPrefix, err) {
+  console.error(logPrefix, err)
+  return apiError(res, 500, 'Внутренняя ошибка сервера')
+}
+
 // ═══════════════════════════════════════════════════════════
 // AUTH — открытые маршруты
 // ═══════════════════════════════════════════════════════════
@@ -71,6 +76,7 @@ app.post('/api/auth/register', async (req, res) => {
 
     if (data.session) {
       return res.status(201).json({
+        message: 'Регистрация прошла успешно',
         user: data.user,
         session: { access_token: data.session.access_token, refresh_token: data.session.refresh_token },
       })
@@ -81,8 +87,7 @@ app.post('/api/auth/register', async (req, res) => {
       user: data.user,
     })
   } catch (err) {
-    console.error('POST /api/auth/register', err)
-    apiError(res, 500, err.message)
+    internalError(res, 'POST /api/auth/register', err)
   }
 })
 
@@ -92,22 +97,27 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body
 
-    if (!email || !password) return apiError(res, 400, 'Email и пароль обязательны')
+    if (!email || typeof email !== 'string' || !email.trim()) {
+      return apiError(res, 400, 'Email обязателен')
+    }
+    if (!password || typeof password !== 'string') {
+      return apiError(res, 400, 'Пароль обязателен')
+    }
 
     const { data, error } = await supabaseAnon.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
     })
 
-    if (error) return apiError(res, 401, error.message)
+    if (error) return apiError(res, 401, 'Неверный email или пароль')
 
     res.json({
+      message: 'Вход выполнен',
       user: data.user,
       session: { access_token: data.session.access_token, refresh_token: data.session.refresh_token },
     })
   } catch (err) {
-    console.error('POST /api/auth/login', err)
-    apiError(res, 500, err.message)
+    internalError(res, 'POST /api/auth/login', err)
   }
 })
 
@@ -117,35 +127,37 @@ app.post('/api/auth/logout', authMiddleware, async (_req, res) => {
   try {
     res.json({ message: 'Вы вышли из аккаунта' })
   } catch (err) {
-    console.error('POST /api/auth/logout', err)
-    apiError(res, 500, err.message)
+    internalError(res, 'POST /api/auth/logout', err)
   }
 })
 
 // ═══════════════════════════════════════════════════════════
-// SUBSCRIBERS — защищённые маршруты
+// SUBSCRIBERS
 // ═══════════════════════════════════════════════════════════
 
-// ─── POST /api/subscribers (user+) ────────────────────────
-// userId берётся из токена, не из тела запроса.
+// ─── POST /api/subscribers (открытый) ─────────────────────
+// email и birthDate из тела запроса. Если email уже есть — 201 с существующей записью.
 
-app.post('/api/subscribers', authMiddleware, async (req, res) => {
+app.post('/api/subscribers', async (req, res) => {
   try {
-    const { birthDate } = req.body
-    const userId = req.user.id
-    const email = req.user.email
+    const { email, birthDate } = req.body
+
+    const emailErr = validateEmail(email)
+    if (emailErr) return apiError(res, 400, emailErr)
 
     const dateErr = validateBirthDate(birthDate)
-    if (dateErr) return apiError(res, 400, dateErr)
+    if (dateErr) return apiError(res, 400, 'Неверный формат даты рождения')
+
+    const normalizedEmail = email.trim().toLowerCase()
 
     const { data: existing } = await supabase
       .from('subscribers')
       .select('*')
-      .eq('email', email)
+      .eq('email', normalizedEmail)
       .maybeSingle()
 
     if (existing) {
-      return res.json({ subscriber: existing, isNew: false })
+      return res.status(201).json({ subscriber: existing, isNew: false })
     }
 
     const sign = getZodiacSign(birthDate)
@@ -153,8 +165,7 @@ app.post('/api/subscribers', authMiddleware, async (req, res) => {
     const { data, error } = await supabase
       .from('subscribers')
       .insert({
-        user_id: userId,
-        email,
+        email: normalizedEmail,
         birth_date: birthDate,
         zodiac_sign: sign?.name ?? null,
       })
@@ -164,26 +175,29 @@ app.post('/api/subscribers', authMiddleware, async (req, res) => {
     if (error) throw error
     res.status(201).json({ subscriber: data, isNew: true })
   } catch (err) {
-    console.error('POST /api/subscribers', err)
-    apiError(res, 500, err.message)
+    internalError(res, 'POST /api/subscribers', err)
   }
 })
 
 // ─── GET /api/subscribers (admin only) ────────────────────
-// Список всех подписчиков
+// Опциональный ?active=true/false для фильтрации.
 
-app.get('/api/subscribers', authMiddleware, requireRole('admin'), async (_req, res) => {
+app.get('/api/subscribers', authMiddleware, requireRole('admin'), async (req, res) => {
   try {
-    const { data, error } = await supabase
+    let query = supabase
       .from('subscribers')
       .select('*')
       .order('created_at', { ascending: false })
 
+    const { active } = req.query
+    if (active === 'true') query = query.eq('active', true)
+    else if (active === 'false') query = query.eq('active', false)
+
+    const { data, error } = await query
     if (error) throw error
     res.json({ subscribers: data })
   } catch (err) {
-    console.error('GET /api/subscribers', err)
-    apiError(res, 500, err.message)
+    internalError(res, 'GET /api/subscribers', err)
   }
 })
 
@@ -192,7 +206,9 @@ app.get('/api/subscribers', authMiddleware, requireRole('admin'), async (_req, r
 app.patch('/api/subscribers/:id/deactivate', authMiddleware, requireRole('admin'), async (req, res) => {
   try {
     const id = Number(req.params.id)
-    if (!id || id < 1) return apiError(res, 400, 'Некорректный id')
+    if (!Number.isFinite(id) || id < 1 || !Number.isInteger(id)) {
+      return apiError(res, 400, 'Неверный идентификатор')
+    }
 
     const { data: existing } = await supabase
       .from('subscribers')
@@ -212,13 +228,12 @@ app.patch('/api/subscribers/:id/deactivate', authMiddleware, requireRole('admin'
     if (error) throw error
     res.json({ subscriber: data })
   } catch (err) {
-    console.error('PATCH /api/subscribers/:id/deactivate', err)
-    apiError(res, 500, err.message)
+    internalError(res, 'PATCH /api/subscribers/:id/deactivate', err)
   }
 })
 
 // ═══════════════════════════════════════════════════════════
-// PROFILE — защищённый маршрут (запись только через сервер)
+// PROFILE — защищённые маршруты
 // ═══════════════════════════════════════════════════════════
 
 // ─── GET /api/profile (user+) ────────────────────────────
@@ -234,8 +249,7 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
     if (error) throw error
     res.json({ profile: data })
   } catch (err) {
-    console.error('GET /api/profile', err)
-    apiError(res, 500, err.message)
+    internalError(res, 'GET /api/profile', err)
   }
 })
 
@@ -248,6 +262,11 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
 
     const tg = typeof telegram === 'string' ? telegram.replace(/^@/, '').trim() : null
     const em = typeof newsletterEmail === 'string' ? newsletterEmail.trim() : null
+
+    if (em) {
+      const emailErr = validateEmail(em)
+      if (emailErr) return apiError(res, 400, emailErr)
+    }
 
     const payload = {
       user_id: userId,
@@ -267,8 +286,7 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
     if (error) throw error
     res.json({ profile: data })
   } catch (err) {
-    console.error('PUT /api/profile', err)
-    apiError(res, 500, err.message)
+    internalError(res, 'PUT /api/profile', err)
   }
 })
 
@@ -277,24 +295,21 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
 app.delete('/api/user/stored-readings', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id
-    const errors = []
     for (const table of ['daily_predictions', 'birth_profiles', 'profiles']) {
       const { error } = await supabase.from(table).delete().eq('user_id', userId)
-      if (error) errors.push(`${table}: ${error.message}`)
+      if (error) throw error
     }
-    if (errors.length) return apiError(res, 500, errors.join('; '))
-    res.json({ ok: true })
+    res.json({ message: 'Данные удалены' })
   } catch (err) {
-    console.error('DELETE /api/user/stored-readings', err)
-    apiError(res, 500, err.message)
+    internalError(res, 'DELETE /api/user/stored-readings', err)
   }
 })
 
 // ═══════════════════════════════════════════════════════════
-// PREDICTION — защищённый маршрут
+// PREDICTION — открытый маршрут
 // ═══════════════════════════════════════════════════════════
 
-app.get('/api/prediction', authMiddleware, async (req, res) => {
+app.get('/api/prediction', async (req, res) => {
   try {
     const { birthDate } = req.query
 
@@ -358,8 +373,7 @@ app.get('/api/prediction', authMiddleware, async (req, res) => {
 
     res.json({ sign: sign.name, prediction, luckyNumber, color, cached: false })
   } catch (err) {
-    console.error('GET /api/prediction', err)
-    apiError(res, 500, err.message)
+    internalError(res, 'GET /api/prediction', err)
   }
 })
 

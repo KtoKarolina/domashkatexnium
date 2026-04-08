@@ -6,17 +6,13 @@ const supabase = createClient(
 )
 
 export function apiError(res, status, message) {
-  return res.status(status).json({ error: message })
+  return res.status(status).json({ message })
 }
 
-/**
- * Проверяет JWT из заголовка Authorization: Bearer <token>.
- * При успехе добавляет req.user (из Supabase Auth) и req.token.
- */
 export async function authMiddleware(req, res, next) {
   const header = req.headers.authorization
   if (!header?.startsWith('Bearer ')) {
-    return apiError(res, 401, 'Требуется авторизация. Передайте заголовок Authorization: Bearer <token>')
+    return apiError(res, 401, 'Требуется авторизация')
   }
 
   const token = header.slice(7)
@@ -31,13 +27,9 @@ export async function authMiddleware(req, res, next) {
   next()
 }
 
-/**
- * Проверяет роль пользователя из таблицы profiles.
- * Использовать после authMiddleware.
- */
 export function requireRole(...roles) {
   return async (req, res, next) => {
-    if (!req.user) return apiError(res, 401, 'Не авторизован')
+    if (!req.user) return apiError(res, 401, 'Требуется авторизация')
 
     const { data, error } = await supabase
       .from('profiles')
@@ -47,12 +39,12 @@ export function requireRole(...roles) {
 
     if (error) {
       console.error('requireRole', error)
-      return apiError(res, 500, 'Ошибка проверки роли')
+      return apiError(res, 500, 'Внутренняя ошибка сервера')
     }
 
     const userRole = data?.role || 'user'
     if (!roles.includes(userRole)) {
-      return apiError(res, 403, `Доступ запрещён. Требуется роль: ${roles.join(' или ')}`)
+      return apiError(res, 403, 'Доступ запрещён')
     }
 
     req.role = userRole

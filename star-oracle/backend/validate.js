@@ -1,7 +1,6 @@
 export function validateEmail(email) {
-  if (!email || typeof email !== 'string') return 'Email обязателен'
-  const trimmed = email.trim()
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return 'Некорректный формат email'
+  if (!email || typeof email !== 'string' || !email.trim()) return 'Некорректный email'
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) return 'Некорректный email'
   return null
 }
 
@@ -12,12 +11,21 @@ export function validatePassword(password) {
 }
 
 export function validateBirthDate(birthDate) {
-  if (!birthDate || typeof birthDate !== 'string') return 'birthDate обязателен'
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return 'birthDate должен быть в формате YYYY-MM-DD'
+  if (!birthDate || typeof birthDate !== 'string' || !birthDate.trim()) {
+    return 'Дата рождения обязательна'
+  }
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+    return 'Неверный формат даты. Используйте YYYY-MM-DD'
+  }
 
   const d = new Date(birthDate + 'T12:00:00')
-  if (Number.isNaN(d.getTime())) return 'Некорректная дата'
+  if (Number.isNaN(d.getTime())) {
+    return 'Неверный формат даты. Используйте YYYY-MM-DD'
+  }
 
+  const year = d.getFullYear()
+  if (year < 1900) return 'Дата рождения не может быть раньше 1900 года'
   if (d > new Date()) return 'Дата рождения не может быть в будущем'
 
   return null
