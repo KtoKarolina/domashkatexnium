@@ -11,6 +11,8 @@ import {
   requireBody, validateBodyEmail, validateBodyBirthDate,
   validateQueryBirthDate, validateParamId,
 } from './validate.js'
+import { startBot } from './telegram.js'
+import { scheduleDailySend } from './daily-send.js'
 
 const app = express()
 app.use(cors())
@@ -440,4 +442,7 @@ app.use((err, _req, res, _next) => {
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
   console.log(`Star Oracle backend → http://localhost:${PORT}`)
+
+  startBot()
+  scheduleDailySend()
 })
