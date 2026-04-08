@@ -13,10 +13,20 @@ import {
 } from './validate.js'
 import { startBot } from './telegram.js'
 import { scheduleDailySend } from './daily-send.js'
+import { log } from './logger.js'
 
 const app = express()
 app.use(cors())
 app.use(express.json())
+
+// ─── Логирование HTTP-запросов и ответов ─────────────────
+app.use((req, res, next) => {
+  const start = Date.now()
+  res.on('finish', () => {
+    log.req(req.method, req.originalUrl, res.statusCode, Date.now() - start)
+  })
+  next()
+})
 
 // ─── Отлов ошибок парсинга JSON ──────────────────────────
 app.use((err, _req, res, next) => {
@@ -64,7 +74,7 @@ const COLORS = [
 ]
 
 function internalError(res, logPrefix, err) {
-  console.error(logPrefix, err)
+  log.error('API', logPrefix, err?.message || err)
   return apiError(res, 500, 'Внутренняя ошибка сервера')
 }
 
@@ -431,7 +441,7 @@ app.get('/api/health', (_req, res) => {
 // ─── Глобальный обработчик ошибок ─────────────────────────
 
 app.use((err, _req, res, _next) => {
-  console.error('Unhandled error:', err)
+  log.error('API', 'Unhandled error', err?.message || err)
   if (!res.headersSent) {
     apiError(res, 500, 'Внутренняя ошибка сервера')
   }
@@ -441,7 +451,7 @@ app.use((err, _req, res, _next) => {
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
-  console.log(`Star Oracle backend → http://localhost:${PORT}`)
+  log.info('SERVER', `Star Oracle backend → http://localhost:${PORT}`)
 
   startBot()
   scheduleDailySend()

@@ -2,6 +2,7 @@ import cron from 'node-cron'
 import { createClient } from '@supabase/supabase-js'
 import { getZodiacSign } from './zodiac.js'
 import { getBot, generatePrediction, formatPrediction } from './telegram.js'
+import { log } from './logger.js'
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -9,19 +10,32 @@ const supabase = createClient(
 )
 
 const SEND_DELAY_MS = 35
+const RETRY_DELAY_MS = 5 * 60 * 1000
+const MAX_RETRIES = 2
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms))
 }
 
+async function generateWithRetry(sign, today, attempt = 1) {
+  try {
+    return await generatePrediction(sign, today)
+  } catch (err) {
+    if (attempt >= MAX_RETRIES) throw err
+    log.warn('CRON', `Ошибка генерации для ${sign.name} (попытка ${attempt}/${MAX_RETRIES}), повтор через 5 мин`, err.message)
+    await sleep(RETRY_DELAY_MS)
+    return generateWithRetry(sign, today, attempt + 1)
+  }
+}
+
 async function sendDailyHoroscopes() {
   const bot = getBot()
   if (!bot) {
-    console.warn('daily-send: бот не инициализирован, пропускаем рассылку')
+    log.warn('CRON', 'Бот не инициализирован, пропускаем рассылку')
     return
   }
 
-  console.log('daily-send: начинаем утреннюю рассылку…')
+  log.info('CRON', 'Начинаем утреннюю рассылку…')
 
   const { data: subscribers, error } = await supabase
     .from('subscribers')
@@ -30,14 +44,16 @@ async function sendDailyHoroscopes() {
     .not('telegram_chat_id', 'is', null)
 
   if (error) {
-    console.error('daily-send: ошибка выборки подписчиков:', error)
+    log.error('CRON', 'Ошибка выборки подписчиков', error.message)
     return
   }
 
   if (!subscribers?.length) {
-    console.log('daily-send: нет активных Telegram-подписчиков')
+    log.info('CRON', 'Нет активных Telegram-подписчиков')
     return
   }
+
+  log.info('CRON', `Найдено ${subscribers.length} активных подписчиков`)
 
   const bySign = {}
   for (const sub of subscribers) {
@@ -58,9 +74,10 @@ async function sendDailyHoroscopes() {
       const signData = getZodiacSign(subs[0].birth_date)
       if (signData) sign.nameEn = signData.nameEn
 
-      prediction = await generatePrediction(sign, today)
+      prediction = await generateWithRetry(sign, today)
+      log.info('CRON', `Прогноз для ${signName} готов → ${subs.length} получателей`)
     } catch (err) {
-      console.error(`daily-send: ошибка генерации для ${signName}:`, err.message)
+      log.error('CRON', `Не удалось сгенерировать прогноз для ${signName} после ${MAX_RETRIES} попыток`, err.message)
       failed += subs.length
       continue
     }
@@ -69,17 +86,19 @@ async function sendDailyHoroscopes() {
 
     for (const sub of subs) {
       try {
-        await bot.api.sendMessage(sub.telegram_chat_id, text, { parse_mode: 'Markdown' })
+        await bot.api.sendMessage(sub.telegram_chat_id, text)
         sent++
+        log.bot('out', sub.telegram_chat_id, 'daily', signName)
       } catch (err) {
-        if (err?.error_code === 403) {
-          console.log(`daily-send: бот заблокирован пользователем ${sub.telegram_chat_id}, деактивируем`)
+        const code = err?.error_code || err?.on?.payload?.error_code
+        if (code === 403) {
+          log.warn('CRON', `Бот заблокирован пользователем ${sub.telegram_chat_id}, деактивируем`)
           await supabase
             .from('subscribers')
             .update({ active: false })
             .eq('id', sub.id)
         } else {
-          console.error(`daily-send: ошибка отправки ${sub.telegram_chat_id}:`, err.message)
+          log.error('CRON', `Ошибка отправки ${sub.telegram_chat_id}`, err.message)
         }
         failed++
       }
@@ -88,24 +107,23 @@ async function sendDailyHoroscopes() {
     }
   }
 
-  console.log(`daily-send: рассылка завершена — отправлено: ${sent}, ошибок: ${failed}`)
+  log.info('CRON', `Рассылка завершена — отправлено: ${sent}, ошибок: ${failed}`)
 }
 
 export function scheduleDailySend() {
   const token = process.env.TELEGRAM_BOT_TOKEN
   if (!token) {
-    console.warn('TELEGRAM_BOT_TOKEN не задан — cron рассылки не запущен')
+    log.warn('CRON', 'TELEGRAM_BOT_TOKEN не задан — cron рассылки не запущен')
     return
   }
 
-  // 08:00 МСК = 05:00 UTC
   cron.schedule('0 5 * * *', () => {
     sendDailyHoroscopes().catch((err) => {
-      console.error('daily-send: необработанная ошибка:', err)
+      log.error('CRON', 'Необработанная ошибка рассылки', err.message)
     })
   }, { timezone: 'Europe/Moscow' })
 
-  console.log('Cron: ежедневная рассылка запланирована на 08:00 МСК')
+  log.info('CRON', 'Ежедневная рассылка запланирована на 08:00 МСК')
 }
 
 export { sendDailyHoroscopes }
