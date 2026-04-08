@@ -218,6 +218,79 @@ app.patch('/api/subscribers/:id/deactivate', authMiddleware, requireRole('admin'
 })
 
 // ═══════════════════════════════════════════════════════════
+// PROFILE — защищённый маршрут (запись только через сервер)
+// ═══════════════════════════════════════════════════════════
+
+// ─── GET /api/profile (user+) ────────────────────────────
+
+app.get('/api/profile', authMiddleware, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', req.user.id)
+      .maybeSingle()
+
+    if (error) throw error
+    res.json({ profile: data })
+  } catch (err) {
+    console.error('GET /api/profile', err)
+    apiError(res, 500, err.message)
+  }
+})
+
+// ─── PUT /api/profile (user+) ────────────────────────────
+
+app.put('/api/profile', authMiddleware, async (req, res) => {
+  try {
+    const { telegram, email: newsletterEmail } = req.body
+    const userId = req.user.id
+
+    const tg = typeof telegram === 'string' ? telegram.replace(/^@/, '').trim() : null
+    const em = typeof newsletterEmail === 'string' ? newsletterEmail.trim() : null
+
+    const payload = {
+      user_id: userId,
+      newsletter_email: em || null,
+      telegram_username: tg || null,
+      email_notifications: Boolean(em),
+      telegram_notifications: Boolean(tg),
+      consent_accepted_at: new Date().toISOString(),
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .upsert(payload, { onConflict: 'user_id' })
+      .select()
+      .single()
+
+    if (error) throw error
+    res.json({ profile: data })
+  } catch (err) {
+    console.error('PUT /api/profile', err)
+    apiError(res, 500, err.message)
+  }
+})
+
+// ─── DELETE /api/user/stored-readings (user+) ──────────────
+
+app.delete('/api/user/stored-readings', authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.id
+    const errors = []
+    for (const table of ['daily_predictions', 'birth_profiles', 'profiles']) {
+      const { error } = await supabase.from(table).delete().eq('user_id', userId)
+      if (error) errors.push(`${table}: ${error.message}`)
+    }
+    if (errors.length) return apiError(res, 500, errors.join('; '))
+    res.json({ ok: true })
+  } catch (err) {
+    console.error('DELETE /api/user/stored-readings', err)
+    apiError(res, 500, err.message)
+  }
+})
+
+// ═══════════════════════════════════════════════════════════
 // PREDICTION — защищённый маршрут
 // ═══════════════════════════════════════════════════════════
 

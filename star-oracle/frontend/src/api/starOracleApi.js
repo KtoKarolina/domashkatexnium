@@ -116,40 +116,41 @@ export async function upsertPrimaryBirth(userId, { date, time, city }) {
 }
 
 export async function upsertProfileContacts(userId, { email, telegram }) {
-  assertSupabaseConfigured()
-  const tg = telegram.replace(/^@/, '').trim()
-  const em = email.trim()
-  const { error } = await supabase.from('profiles').upsert(
-    {
-      user_id: userId,
-      newsletter_email: em || null,
-      telegram_username: tg || null,
-      email_notifications: Boolean(em),
-      telegram_notifications: Boolean(tg),
-      consent_accepted_at: new Date().toISOString(),
-    },
-    { onConflict: 'user_id' },
-  )
-
-  if (error) throw error
+  const headers = await authHeaders()
+  const res = await fetch(`${API_BASE}/api/profile`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ email, telegram }),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
+  }
+  return res.json()
 }
 
 export async function fetchProfileRow(userId) {
-  assertSupabaseConfigured()
-  const { data, error } = await supabase.from('profiles').select('*').eq('user_id', userId).maybeSingle()
-
-  if (error) throw error
-  return data
+  const headers = await authHeaders()
+  const res = await fetch(`${API_BASE}/api/profile`, { headers })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
+  }
+  const json = await res.json()
+  return json.profile
 }
 
 export async function deleteUserStoredReadings(userId) {
   assertSupabaseConfigured()
-  const errors = []
-  for (const table of ['daily_predictions', 'birth_profiles', 'profiles']) {
-    const { error } = await supabase.from(table).delete().eq('user_id', userId)
-    if (error) errors.push(`${table}: ${error.message}`)
+  const headers = await authHeaders()
+  const res = await fetch(`${API_BASE}/api/user/stored-readings`, {
+    method: 'DELETE',
+    headers,
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
   }
-  if (errors.length) throw new Error(errors.join('; '))
 }
 
 // ─── Backend API (Express) — требуют авторизации ──────────
