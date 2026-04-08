@@ -1,15 +1,28 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import rateLimit from 'express-rate-limit'
 import { createClient } from '@supabase/supabase-js'
 import OpenAI from 'openai'
 import { getZodiacSign } from './zodiac.js'
 import { apiError, authMiddleware, requireRole } from './middleware.js'
-import { validateEmail, validatePassword, validateBirthDate } from './validate.js'
+import {
+  validateEmail, validatePassword, validateBirthDate,
+  requireBody, validateBodyEmail, validateBodyBirthDate,
+  validateQueryBirthDate, validateParamId,
+} from './validate.js'
 
 const app = express()
 app.use(cors())
 app.use(express.json())
+
+// ─── Отлов ошибок парсинга JSON ──────────────────────────
+app.use((err, _req, res, next) => {
+  if (err.type === 'entity.parse.failed') {
+    return apiError(res, 400, 'Некорректный JSON в теле запроса')
+  }
+  next(err)
+})
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -22,6 +35,15 @@ const supabaseAnon = createClient(
 )
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+
+// ─── Rate limiter для /api/prediction ─────────────────────
+const predictionLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Слишком много запросов. Попробуйте через минуту.' },
+})
 
 // ─── Helpers ──────────────────────────────────────────────
 
@@ -48,9 +70,7 @@ function internalError(res, logPrefix, err) {
 // AUTH — открытые маршруты
 // ═══════════════════════════════════════════════════════════
 
-// ─── POST /api/auth/register ──────────────────────────────
-
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', requireBody('email', 'password'), async (req, res) => {
   try {
     const { email, password } = req.body
 
@@ -65,7 +85,7 @@ app.post('/api/auth/register', async (req, res) => {
       password,
     })
 
-    if (error) return apiError(res, 400, error.message)
+    if (error) return apiError(res, 400, 'Не удалось создать аккаунт. Проверьте данные.')
 
     if (data.user) {
       await supabase.from('profiles').upsert(
@@ -91,18 +111,9 @@ app.post('/api/auth/register', async (req, res) => {
   }
 })
 
-// ─── POST /api/auth/login ─────────────────────────────────
-
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', requireBody('email', 'password'), async (req, res) => {
   try {
     const { email, password } = req.body
-
-    if (!email || typeof email !== 'string' || !email.trim()) {
-      return apiError(res, 400, 'Email обязателен')
-    }
-    if (!password || typeof password !== 'string') {
-      return apiError(res, 400, 'Пароль обязателен')
-    }
 
     const { data, error } = await supabaseAnon.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
@@ -121,8 +132,6 @@ app.post('/api/auth/login', async (req, res) => {
   }
 })
 
-// ─── POST /api/auth/logout ────────────────────────────────
-
 app.post('/api/auth/logout', authMiddleware, async (_req, res) => {
   try {
     res.json({ message: 'Вы вышли из аккаунта' })
@@ -132,55 +141,52 @@ app.post('/api/auth/logout', authMiddleware, async (_req, res) => {
 })
 
 // ═══════════════════════════════════════════════════════════
-// SUBSCRIBERS
+// SUBSCRIBERS — требуют авторизации
 // ═══════════════════════════════════════════════════════════
 
-// ─── POST /api/subscribers (открытый) ─────────────────────
-// email и birthDate из тела запроса. Если email уже есть — 201 с существующей записью.
+// ─── POST /api/subscribers (auth, email из токена) ────────
 
-app.post('/api/subscribers', async (req, res) => {
-  try {
-    const { email, birthDate } = req.body
+app.post(
+  '/api/subscribers',
+  authMiddleware,
+  validateBodyBirthDate('birthDate'),
+  async (req, res) => {
+    try {
+      const { birthDate } = req.body
+      const email = req.user.email
 
-    const emailErr = validateEmail(email)
-    if (emailErr) return apiError(res, 400, emailErr)
+      const { data: existing } = await supabase
+        .from('subscribers')
+        .select('*')
+        .eq('email', email)
+        .maybeSingle()
 
-    const dateErr = validateBirthDate(birthDate)
-    if (dateErr) return apiError(res, 400, 'Неверный формат даты рождения')
+      if (existing) {
+        return res.status(201).json({ subscriber: existing, isNew: false })
+      }
 
-    const normalizedEmail = email.trim().toLowerCase()
+      const sign = getZodiacSign(birthDate)
 
-    const { data: existing } = await supabase
-      .from('subscribers')
-      .select('*')
-      .eq('email', normalizedEmail)
-      .maybeSingle()
+      const { data, error } = await supabase
+        .from('subscribers')
+        .insert({
+          user_id: req.user.id,
+          email,
+          birth_date: birthDate,
+          zodiac_sign: sign?.name ?? null,
+        })
+        .select()
+        .single()
 
-    if (existing) {
-      return res.status(201).json({ subscriber: existing, isNew: false })
+      if (error) throw error
+      res.status(201).json({ subscriber: data, isNew: true })
+    } catch (err) {
+      internalError(res, 'POST /api/subscribers', err)
     }
-
-    const sign = getZodiacSign(birthDate)
-
-    const { data, error } = await supabase
-      .from('subscribers')
-      .insert({
-        email: normalizedEmail,
-        birth_date: birthDate,
-        zodiac_sign: sign?.name ?? null,
-      })
-      .select()
-      .single()
-
-    if (error) throw error
-    res.status(201).json({ subscriber: data, isNew: true })
-  } catch (err) {
-    internalError(res, 'POST /api/subscribers', err)
-  }
-})
+  },
+)
 
 // ─── GET /api/subscribers (admin only) ────────────────────
-// Опциональный ?active=true/false для фильтрации.
 
 app.get('/api/subscribers', authMiddleware, requireRole('admin'), async (req, res) => {
   try {
@@ -201,42 +207,80 @@ app.get('/api/subscribers', authMiddleware, requireRole('admin'), async (req, re
   }
 })
 
+// ─── PATCH /api/subscribers/:id (auth, самоотписка) ───────
+
+app.patch(
+  '/api/subscribers/:id',
+  authMiddleware,
+  validateParamId('id'),
+  async (req, res) => {
+    try {
+      const id = req.validatedId
+
+      const { data: existing } = await supabase
+        .from('subscribers')
+        .select('id, user_id')
+        .eq('id', id)
+        .maybeSingle()
+
+      if (!existing) return apiError(res, 404, 'Подписчик не найден')
+
+      if (existing.user_id !== req.user.id && req.role !== 'admin') {
+        return apiError(res, 403, 'Нет прав на изменение чужой подписки')
+      }
+
+      const { data, error } = await supabase
+        .from('subscribers')
+        .update({ active: false })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+      res.json({ message: 'Подписка деактивирована', subscriber: data })
+    } catch (err) {
+      internalError(res, 'PATCH /api/subscribers/:id', err)
+    }
+  },
+)
+
 // ─── PATCH /api/subscribers/:id/deactivate (admin only) ───
 
-app.patch('/api/subscribers/:id/deactivate', authMiddleware, requireRole('admin'), async (req, res) => {
-  try {
-    const id = Number(req.params.id)
-    if (!Number.isFinite(id) || id < 1 || !Number.isInteger(id)) {
-      return apiError(res, 400, 'Неверный идентификатор')
+app.patch(
+  '/api/subscribers/:id/deactivate',
+  authMiddleware,
+  requireRole('admin'),
+  validateParamId('id'),
+  async (req, res) => {
+    try {
+      const id = req.validatedId
+
+      const { data: existing } = await supabase
+        .from('subscribers')
+        .select('id')
+        .eq('id', id)
+        .maybeSingle()
+
+      if (!existing) return apiError(res, 404, 'Подписчик не найден')
+
+      const { data, error } = await supabase
+        .from('subscribers')
+        .update({ active: false })
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (error) throw error
+      res.json({ message: 'Подписчик деактивирован', subscriber: data })
+    } catch (err) {
+      internalError(res, 'PATCH /api/subscribers/:id/deactivate', err)
     }
-
-    const { data: existing } = await supabase
-      .from('subscribers')
-      .select('id')
-      .eq('id', id)
-      .maybeSingle()
-
-    if (!existing) return apiError(res, 404, 'Подписчик не найден')
-
-    const { data, error } = await supabase
-      .from('subscribers')
-      .update({ active: false })
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) throw error
-    res.json({ subscriber: data })
-  } catch (err) {
-    internalError(res, 'PATCH /api/subscribers/:id/deactivate', err)
-  }
-})
+  },
+)
 
 // ═══════════════════════════════════════════════════════════
 // PROFILE — защищённые маршруты
 // ═══════════════════════════════════════════════════════════
-
-// ─── GET /api/profile (user+) ────────────────────────────
 
 app.get('/api/profile', authMiddleware, async (req, res) => {
   try {
@@ -253,11 +297,9 @@ app.get('/api/profile', authMiddleware, async (req, res) => {
   }
 })
 
-// ─── PUT /api/profile (user+) ────────────────────────────
-
 app.put('/api/profile', authMiddleware, async (req, res) => {
   try {
-    const { telegram, email: newsletterEmail } = req.body
+    const { telegram, email: newsletterEmail } = req.body ?? {}
     const userId = req.user.id
 
     const tg = typeof telegram === 'string' ? telegram.replace(/^@/, '').trim() : null
@@ -290,8 +332,6 @@ app.put('/api/profile', authMiddleware, async (req, res) => {
   }
 })
 
-// ─── DELETE /api/user/stored-readings (user+) ──────────────
-
 app.delete('/api/user/stored-readings', authMiddleware, async (req, res) => {
   try {
     const userId = req.user.id
@@ -306,81 +346,93 @@ app.delete('/api/user/stored-readings', authMiddleware, async (req, res) => {
 })
 
 // ═══════════════════════════════════════════════════════════
-// PREDICTION — открытый маршрут
+// PREDICTION — авторизация + rate limit
 // ═══════════════════════════════════════════════════════════
 
-app.get('/api/prediction', async (req, res) => {
-  try {
-    const { birthDate } = req.query
+app.get(
+  '/api/prediction',
+  authMiddleware,
+  predictionLimiter,
+  validateQueryBirthDate('birthDate'),
+  async (req, res) => {
+    try {
+      const { birthDate } = req.query
 
-    const dateErr = validateBirthDate(birthDate)
-    if (dateErr) return apiError(res, 400, dateErr)
+      const sign = getZodiacSign(birthDate)
+      if (!sign) return apiError(res, 400, 'Не удалось определить знак зодиака')
 
-    const sign = getZodiacSign(birthDate)
-    if (!sign) return apiError(res, 400, 'Не удалось определить знак зодиака')
+      const today = todayISO()
 
-    const today = todayISO()
+      const { data: cached } = await supabase
+        .from('predictions')
+        .select('*')
+        .eq('sign', sign.name)
+        .eq('date', today)
+        .maybeSingle()
 
-    const { data: cached } = await supabase
-      .from('predictions')
-      .select('*')
-      .eq('sign', sign.name)
-      .eq('date', today)
-      .maybeSingle()
+      if (cached) {
+        return res.json({
+          sign: cached.sign,
+          prediction: cached.prediction,
+          luckyNumber: cached.lucky_number,
+          color: cached.color,
+          cached: true,
+        })
+      }
 
-    if (cached) {
-      return res.json({
-        sign: cached.sign,
-        prediction: cached.prediction,
-        luckyNumber: cached.lucky_number,
-        color: cached.color,
-        cached: true,
+      const todayFormatted = new Date().toLocaleDateString('ru-RU', {
+        day: 'numeric', month: 'long', year: 'numeric',
       })
+
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        temperature: 0.9,
+        max_tokens: 400,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Ты — ведический астролог. Отвечай на русском. ' +
+              'Дай краткий персональный гороскоп на сегодня (3–5 предложений). ' +
+              'Тон: тёплый, поддерживающий, без негатива. ' +
+              'Не упоминай, что ты ИИ.',
+          },
+          {
+            role: 'user',
+            content: `Знак зодиака: ${sign.name} (${sign.nameEn}). Дата: ${todayFormatted}. Дай гороскоп на сегодня.`,
+          },
+        ],
+      })
+
+      const prediction = completion.choices[0]?.message?.content?.trim() || ''
+      const luckyNumber = randomInt(1, 99)
+      const color = COLORS[randomInt(0, COLORS.length - 1)]
+
+      await supabase.from('predictions').upsert(
+        { sign: sign.name, prediction, lucky_number: luckyNumber, color, date: today },
+        { onConflict: 'sign,date' },
+      )
+
+      res.json({ sign: sign.name, prediction, luckyNumber, color, cached: false })
+    } catch (err) {
+      internalError(res, 'GET /api/prediction', err)
     }
-
-    const todayFormatted = new Date().toLocaleDateString('ru-RU', {
-      day: 'numeric', month: 'long', year: 'numeric',
-    })
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      temperature: 0.9,
-      max_tokens: 400,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'Ты — ведический астролог. Отвечай на русском. ' +
-            'Дай краткий персональный гороскоп на сегодня (3–5 предложений). ' +
-            'Тон: тёплый, поддерживающий, без негатива. ' +
-            'Не упоминай, что ты ИИ.',
-        },
-        {
-          role: 'user',
-          content: `Знак зодиака: ${sign.name} (${sign.nameEn}). Дата: ${todayFormatted}. Дай гороскоп на сегодня.`,
-        },
-      ],
-    })
-
-    const prediction = completion.choices[0]?.message?.content?.trim() || ''
-    const luckyNumber = randomInt(1, 99)
-    const color = COLORS[randomInt(0, COLORS.length - 1)]
-
-    await supabase.from('predictions').upsert(
-      { sign: sign.name, prediction, lucky_number: luckyNumber, color, date: today },
-      { onConflict: 'sign,date' },
-    )
-
-    res.json({ sign: sign.name, prediction, luckyNumber, color, cached: false })
-  } catch (err) {
-    internalError(res, 'GET /api/prediction', err)
-  }
-})
+  },
+)
 
 // ─── Health (открытый) ────────────────────────────────────
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() })
+})
+
+// ─── Глобальный обработчик ошибок ─────────────────────────
+
+app.use((err, _req, res, _next) => {
+  console.error('Unhandled error:', err)
+  if (!res.headersSent) {
+    apiError(res, 500, 'Внутренняя ошибка сервера')
+  }
 })
 
 // ─── Start ────────────────────────────────────────────────

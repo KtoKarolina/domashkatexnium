@@ -168,11 +168,19 @@ export async function fetchAIPrediction(birthDate) {
   )
 }
 
-export async function createSubscriber(email, birthDate) {
+export async function createSubscriber(birthDate) {
   const headers = await authHeaders()
   return apiFetch(`${API_BASE}/api/subscribers`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ email, birthDate }),
+    body: JSON.stringify({ birthDate }),
+  })
+}
+
+export async function unsubscribe(subscriberId) {
+  const headers = await authHeaders()
+  return apiFetch(`${API_BASE}/api/subscribers/${subscriberId}`, {
+    method: 'PATCH',
+    headers,
   })
 }
