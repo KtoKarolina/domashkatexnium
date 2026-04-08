@@ -1,8 +1,8 @@
 import { Bot, GrammyError, HttpError } from 'grammy'
 import { createClient } from '@supabase/supabase-js'
 import { getZodiacSign } from './zodiac.js'
-import { validateBirthDate } from './validate.js'
 import { log } from './logger.js'
+import { generateLocalForecast } from './local-forecast.js'
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -22,6 +22,40 @@ async function reply(ctx, text, opts) {
   return ctx.reply(text, opts)
 }
 
+/**
+ * Парсит дату в формате ДД.ММ.ГГГГ → YYYY-MM-DD (для БД).
+ * Возвращает { iso, error }.
+ */
+function parseBirthInput(raw) {
+  if (!raw || typeof raw !== 'string') {
+    return { iso: null, error: 'Укажите дату рождения в формате ДД.ММ.ГГГГ, например: /prognoz 21.10.1999' }
+  }
+
+  const m = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/)
+  if (!m) {
+    return { iso: null, error: 'Неверный формат даты. Используйте ДД.ММ.ГГГГ, например: /prognoz 21.10.1999' }
+  }
+
+  const day = parseInt(m[1], 10)
+  const month = parseInt(m[2], 10)
+  const year = parseInt(m[3], 10)
+
+  if (month < 1 || month > 12) return { iso: null, error: 'Месяц должен быть от 01 до 12' }
+  if (day < 1 || day > 31) return { iso: null, error: 'День должен быть от 01 до 31' }
+  if (year < 1900) return { iso: null, error: 'Год не может быть раньше 1900' }
+
+  const iso = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+  const d = new Date(iso + 'T12:00:00')
+  if (Number.isNaN(d.getTime())) {
+    return { iso: null, error: 'Неверная дата. Проверьте день и месяц.' }
+  }
+  if (d > new Date()) {
+    return { iso: null, error: 'Дата рождения не может быть в будущем' }
+  }
+
+  return { iso, error: null }
+}
+
 export function startBot() {
   const token = process.env.TELEGRAM_BOT_TOKEN
   if (!token) {
@@ -36,43 +70,32 @@ export function startBot() {
     log.bot('in', ctx.chat.id, 'start')
     try {
       await reply(ctx,
-        '✨ Привет! Я *Звёздный Оракул*.\n\n' +
-        'Подпишись на ежедневный гороскоп:\n' +
-        '`/subscribe 1990-05-15`\n\n' +
+        '✨ Привет! Я Звёздный Оракул.\n\n' +
+        'Получи свой персональный гороскоп:\n' +
+        '/prognoz 21.10.1999\n\n' +
         'Доступные команды:\n' +
-        '/subscribe YYYY\\-MM\\-DD — подписаться\n' +
+        '/prognoz ДД.ММ.ГГГГ — подписаться и получить прогноз\n' +
         '/horoscope — получить гороскоп сейчас\n' +
         '/unsubscribe — отписаться\n' +
         '/status — проверить подписку',
-        { parse_mode: 'MarkdownV2' },
       )
     } catch (err) {
       log.error('BOT', '/start error', err.message)
-      await ctx.reply(
-        '✨ Привет! Я Звёздный Оракул.\n\n' +
-        'Подпишись на ежедневный гороскоп:\n' +
-        '/subscribe 1990-05-15\n\n' +
-        'Доступные команды:\n' +
-        '/subscribe YYYY-MM-DD — подписаться\n' +
-        '/horoscope — получить гороскоп сейчас\n' +
-        '/unsubscribe — отписаться\n' +
-        '/status — проверить подписку',
-      ).catch(() => {})
     }
   })
 
-  // ─── /subscribe YYYY-MM-DD ───────────────────────────────
-  bot.command('subscribe', async (ctx) => {
+  // ─── /prognoz ДД.ММ.ГГГГ ────────────────────────────────
+  bot.command('prognoz', async (ctx) => {
     const chatId = ctx.chat.id
-    const birthDate = ctx.match?.trim()
-    log.bot('in', chatId, 'subscribe', birthDate || '(пусто)')
+    const rawDate = ctx.match?.trim()
+    log.bot('in', chatId, 'prognoz', rawDate || '(пусто)')
 
     try {
-      if (!birthDate) {
-        return reply(ctx, 'Укажите дату рождения: /subscribe 1990-05-15')
+      if (!rawDate) {
+        return reply(ctx, 'Укажите дату рождения: /prognoz 21.10.1999')
       }
 
-      const dateErr = validateBirthDate(birthDate)
+      const { iso: birthDate, error: dateErr } = parseBirthInput(rawDate)
       if (dateErr) {
         return reply(ctx, `❌ ${dateErr}`)
       }
@@ -89,7 +112,7 @@ export function startBot() {
         .maybeSingle()
 
       if (selErr) {
-        log.error('BOT', '/subscribe select error', selErr.message)
+        log.error('BOT', '/prognoz select error', selErr.message)
         return reply(ctx, '❌ Ошибка базы данных. Попробуйте позже.')
       }
 
@@ -99,17 +122,11 @@ export function startBot() {
             .from('subscribers')
             .update({ active: true, birth_date: birthDate, zodiac_sign: sign.name })
             .eq('id', existing.id)
-          if (upErr) log.error('BOT', '/subscribe reactivate error', upErr.message)
+          if (upErr) log.error('BOT', '/prognoz reactivate error', upErr.message)
           log.info('BOT', `Подписчик ${chatId} реактивирован (${sign.name})`)
         } else {
           log.info('BOT', `Подписчик ${chatId} уже подписан (${existing.zodiac_sign})`)
         }
-
-        await reply(ctx,
-          `Вы уже подписаны (${existing.zodiac_sign || sign.name}) 🌟\n` +
-          'Каждое утро в 8:00 я пришлю персональный прогноз.\n\n' +
-          '🔮 Генерирую ваш гороскоп на сегодня…',
-        )
       } else {
         const { error: insErr } = await supabase
           .from('subscribers')
@@ -122,23 +139,22 @@ export function startBot() {
           })
 
         if (insErr) {
-          log.error('BOT', '/subscribe insert error', insErr.message)
+          log.error('BOT', '/prognoz insert error', insErr.message)
           return reply(ctx, '❌ Не удалось оформить подписку. Попробуйте позже.')
         }
 
         log.info('BOT', `Новый подписчик ${chatId} → ${sign.name}`)
-
-        await reply(ctx,
-          `${sign.name}, добро пожаловать! 🌟\n` +
-          'Каждое утро в 8:00 я буду присылать тебе персональный прогноз.\n\n' +
-          '🔮 Генерирую твой первый гороскоп…',
-        )
       }
 
-      // Неблокирующая отправка прогноза — ошибка генерации не ломает подписку
-      sendPredictionSafe(ctx, sign).catch(() => {})
+      await reply(ctx,
+        `${sign.name}, добро пожаловать! 🌟\n` +
+        'Каждое утро в 8:00 я пришлю персональный прогноз.\n\n' +
+        '🔮 Генерирую гороскоп…',
+      )
+
+      await sendPredictionSafe(ctx, sign, birthDate)
     } catch (err) {
-      log.error('BOT', '/subscribe unhandled error', err.message)
+      log.error('BOT', '/prognoz unhandled error', err.message)
       await ctx.reply('❌ Произошла ошибка. Попробуйте позже.').catch(() => {})
     }
   })
@@ -161,7 +177,7 @@ export function startBot() {
       }
 
       if (!sub) {
-        return reply(ctx, 'Вы не подписаны. Используйте /subscribe YYYY-MM-DD')
+        return reply(ctx, 'Вы не подписаны. Используйте /prognoz ДД.ММ.ГГГГ')
       }
 
       const sign = getZodiacSign(sub.birth_date)
@@ -170,7 +186,7 @@ export function startBot() {
       }
 
       await reply(ctx, '🔮 Генерирую прогноз…')
-      await sendPredictionSafe(ctx, sign)
+      await sendPredictionSafe(ctx, sign, sub.birth_date)
     } catch (err) {
       log.error('BOT', '/horoscope unhandled error', err.message)
       await ctx.reply('❌ Не удалось сгенерировать прогноз. Попробуйте позже.').catch(() => {})
@@ -195,7 +211,7 @@ export function startBot() {
       }
 
       if (!sub) {
-        return reply(ctx, 'Вы не подписаны. Используйте /subscribe YYYY-MM-DD')
+        return reply(ctx, 'Вы не подписаны. Используйте /prognoz ДД.ММ.ГГГГ')
       }
 
       if (!sub.active) {
@@ -213,7 +229,7 @@ export function startBot() {
       }
 
       log.info('BOT', `Подписчик ${chatId} отписался`)
-      await reply(ctx, 'Подписка отключена. Чтобы вернуться: /subscribe YYYY-MM-DD')
+      await reply(ctx, 'Подписка отключена. Чтобы вернуться: /prognoz ДД.ММ.ГГГГ')
     } catch (err) {
       log.error('BOT', '/unsubscribe unhandled error', err.message)
       await ctx.reply('❌ Произошла ошибка. Попробуйте позже.').catch(() => {})
@@ -238,7 +254,7 @@ export function startBot() {
       }
 
       if (!sub) {
-        return reply(ctx, 'Вы не подписаны. Используйте /subscribe YYYY-MM-DD')
+        return reply(ctx, 'Вы не подписаны. Используйте /prognoz ДД.ММ.ГГГГ')
       }
 
       const status = sub.active ? '✅ Активна' : '❌ Отключена'
@@ -260,12 +276,17 @@ export function startBot() {
     log.bot('in', chatId, 'text', text.slice(0, 60))
 
     try {
+      if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(text)) {
+        return reply(ctx, `Похоже, вы отправили дату. Используйте команду:\n/prognoz ${text}`)
+      }
       if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
-        return reply(ctx, `Похоже, вы отправили дату. Используйте команду:\n/subscribe ${text}`)
+        const parts = text.split('-')
+        const dotDate = `${parts[2]}.${parts[1]}.${parts[0]}`
+        return reply(ctx, `Используйте формат ДД.ММ.ГГГГ:\n/prognoz ${dotDate}`)
       }
       await reply(ctx,
         'Я понимаю только команды:\n' +
-        '/subscribe YYYY-MM-DD — подписаться\n' +
+        '/prognoz ДД.ММ.ГГГГ — подписаться и получить прогноз\n' +
         '/horoscope — получить гороскоп\n' +
         '/unsubscribe — отписаться\n' +
         '/status — проверить подписку',
@@ -295,16 +316,16 @@ export function startBot() {
 
 // ─── Неблокирующая отправка прогноза ─────────────────────────
 
-async function sendPredictionSafe(ctx, sign) {
+async function sendPredictionSafe(ctx, sign, birthDate) {
   try {
     const today = new Date().toISOString().slice(0, 10)
-    const prediction = await generatePrediction(sign, today)
+    const prediction = await generatePrediction(sign, today, birthDate)
     await reply(ctx,
       formatPrediction(sign.name, prediction.prediction, prediction.lucky_number, prediction.color),
     )
   } catch (err) {
     log.error('BOT', `Не удалось сгенерировать прогноз для ${sign.name}`, err.message)
-    await ctx.reply('⚠️ Не удалось сгенерировать прогноз прямо сейчас. Попробуйте /horoscope позже.').catch(() => {})
+    await ctx.reply('⚠️ Не удалось сгенерировать прогноз. Попробуйте /horoscope позже.').catch(() => {})
   }
 }
 
@@ -333,7 +354,8 @@ export function formatPrediction(signName, prediction, luckyNumber, color) {
   )
 }
 
-export async function generatePrediction(sign, today) {
+export async function generatePrediction(sign, today, birthDate) {
+  // 1. Проверяем кэш
   const { data: cached } = await supabase
     .from('predictions')
     .select('*')
@@ -346,45 +368,77 @@ export async function generatePrediction(sign, today) {
     return cached
   }
 
-  log.info('BOT', `Генерация прогноза для ${sign.name} через OpenAI…`)
+  // 2. Пытаемся OpenAI (если ключ задан)
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      log.info('BOT', `Генерация прогноза для ${sign.name} через OpenAI…`)
 
-  const OpenAI = (await import('openai')).default
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+      const OpenAI = (await import('openai')).default
+      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
-  const todayFormatted = new Date().toLocaleDateString('ru-RU', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  })
+      const todayFormatted = new Date().toLocaleDateString('ru-RU', {
+        day: 'numeric', month: 'long', year: 'numeric',
+      })
 
-  const completion = await openai.chat.completions.create({
-    model: 'gpt-4o-mini',
-    temperature: 0.9,
-    max_tokens: 400,
-    messages: [
-      {
-        role: 'system',
-        content:
-          'Ты — ведический астролог. Отвечай на русском. ' +
-          'Дай краткий персональный гороскоп на сегодня (3–5 предложений). ' +
-          'Тон: тёплый, поддерживающий, без негатива. ' +
-          'Не упоминай, что ты ИИ.',
-      },
-      {
-        role: 'user',
-        content: `Знак зодиака: ${sign.name} (${sign.nameEn}). Дата: ${todayFormatted}. Дай гороскоп на сегодня.`,
-      },
-    ],
-  })
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        temperature: 0.9,
+        max_tokens: 400,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Ты — ведический астролог. Отвечай на русском. ' +
+              'Дай краткий персональный гороскоп на сегодня (3–5 предложений). ' +
+              'Тон: тёплый, поддерживающий, без негатива. ' +
+              'Не упоминай, что ты ИИ.',
+          },
+          {
+            role: 'user',
+            content: `Знак зодиака: ${sign.name} (${sign.nameEn}). Дата: ${todayFormatted}. Дай гороскоп на сегодня.`,
+          },
+        ],
+      })
 
-  const prediction = completion.choices[0]?.message?.content?.trim() || ''
-  const luckyNumber = randomInt(1, 99)
+      const prediction = completion.choices[0]?.message?.content?.trim() || ''
+      const luckyNumber = randomInt(1, 99)
+      const color = COLORS[randomInt(0, COLORS.length - 1)]
+
+      log.info('BOT', `Прогноз для ${sign.name} сгенерирован через OpenAI`)
+
+      await supabase.from('predictions').upsert(
+        { sign: sign.name, prediction, lucky_number: luckyNumber, color, date: today },
+        { onConflict: 'sign,date' },
+      )
+
+      return { sign: sign.name, prediction, lucky_number: luckyNumber, color, date: today }
+    } catch (err) {
+      log.warn('BOT', `OpenAI недоступен для ${sign.name}, используем локальный генератор`, err.message)
+    }
+  }
+
+  // 3. Fallback — локальный генератор
+  log.info('BOT', `Генерация прогноза для ${sign.name} локально`)
+  const bd = birthDate || today
+  const local = generateLocalForecast(bd, today)
   const color = COLORS[randomInt(0, COLORS.length - 1)]
 
-  log.info('BOT', `Прогноз для ${sign.name} сгенерирован, сохраняю в кэш`)
+  const result = {
+    sign: sign.name,
+    prediction: local.mainText,
+    lucky_number: local.luckyNumber,
+    color,
+    date: today,
+  }
 
-  await supabase.from('predictions').upsert(
-    { sign: sign.name, prediction, lucky_number: luckyNumber, color, date: today },
-    { onConflict: 'sign,date' },
-  )
+  try {
+    await supabase.from('predictions').upsert(
+      { sign: result.sign, prediction: result.prediction, lucky_number: result.lucky_number, color: result.color, date: today },
+      { onConflict: 'sign,date' },
+    )
+  } catch (e) {
+    log.warn('BOT', 'Не удалось сохранить прогноз в кэш', e.message)
+  }
 
-  return { sign: sign.name, prediction, lucky_number: luckyNumber, color, date: today }
+  return result
 }

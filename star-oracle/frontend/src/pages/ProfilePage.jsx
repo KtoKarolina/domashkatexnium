@@ -89,22 +89,18 @@ export function ProfilePage() {
         )}
       </Card>
       <Card className="mb-6 max-w-lg">
-        <h3 className="font-display text-lg text-star-gold">📬 Контакты (рассылка)</h3>
-        {profileRow?.newsletter_email || profileRow?.telegram_username ? (
-          <ul className="mt-3 space-y-1 text-purple-100">
-            {profileRow.newsletter_email ? <li>Email: {profileRow.newsletter_email}</li> : null}
-            {profileRow.telegram_username ? (
-              <li>TG: @{profileRow.telegram_username.replace(/^@/, '')}</li>
-            ) : null}
-          </ul>
-        ) : (
-          <p className="mt-3 text-purple-200">
-            Не задано.{' '}
-            <NavLink to="/subscribe" className="text-violet-300 underline">
-              Подписка
-            </NavLink>
-          </p>
-        )}
+        <h3 className="font-display text-lg text-star-gold">📬 Ежедневный прогноз</h3>
+        <p className="mt-3 text-purple-200">
+          Подпишитесь на бота в Telegram — каждое утро в 8:00 получайте персональный гороскоп.
+        </p>
+        <a
+          href="https://t.me/zvezdnyiorakul_bot"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-2 rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-500"
+        >
+          Открыть бота в Telegram
+        </a>
       </Card>
       <Card className="mb-6 max-w-lg">
         <h3 className="font-display text-lg text-star-gold">🌙 Прогноз</h3>
