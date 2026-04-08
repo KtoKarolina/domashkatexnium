@@ -21,7 +21,7 @@ class RootErrorBoundary extends React.Component {
       return (
         <div className="min-h-screen bg-cosmic-950 px-4 py-8 text-rose-400">
           <p className="font-medium">Ошибка интерфейса</p>
-          <pre className="mt-2 whitespace-pre-wrap text-sm text-slate-400">{String(this.state.err)}</pre>
+          <pre className="mt-2 whitespace-pre-wrap text-sm text-purple-300">{String(this.state.err)}</pre>
         </div>
       )
     }
@@ -30,7 +30,7 @@ class RootErrorBoundary extends React.Component {
 }
 
 function AppGate() {
-  const { loading, error, needsEmailLogin, user } = useAuth()
+  const { loading, error, user } = useAuth()
 
   if (loading) {
     return (
@@ -46,13 +46,13 @@ function AppGate() {
         <p>
           Ошибка: {error}
           <br />
-          <span className="mt-2 block text-sm text-slate-400">Проверьте .env и ключи в Supabase.</span>
+          <span className="mt-2 block text-sm text-purple-300">Проверьте .env и ключи в Supabase.</span>
         </p>
       </div>
     )
   }
 
-  if (needsEmailLogin && !user) {
+  if (!user) {
     return <EmailLoginForm />
   }
 

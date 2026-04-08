@@ -1,8 +1,10 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { CosmicStars } from '../CosmicStars.jsx'
+import { useAuth } from '../AuthContext.jsx'
 
 export function Layout() {
   const location = useLocation()
+  const { user, logout } = useAuth()
   const linkClass = ({ isActive }) =>
     `rounded-lg px-3 py-2 text-sm transition-colors ${
       isActive
@@ -21,7 +23,7 @@ export function Layout() {
           <NavLink to="/" className="font-display text-lg text-star-gold md:text-xl">
             ✨ Звёздный оракул
           </NavLink>
-          <nav className="flex flex-wrap gap-1 text-xs md:text-sm">
+          <nav className="flex flex-wrap items-center gap-1 text-xs md:text-sm">
             <NavLink to="/" end className={linkClass}>
               🏠 Главная
             </NavLink>
@@ -40,6 +42,15 @@ export function Layout() {
             <NavLink to="/legal" className={linkClass}>
               📋 Юр.
             </NavLink>
+            {user && (
+              <button
+                type="button"
+                onClick={logout}
+                className="ml-2 rounded-lg px-3 py-2 text-sm text-purple-300 transition-colors hover:bg-rose-900/30 hover:text-rose-300"
+              >
+                Выйти
+              </button>
+            )}
           </nav>
         </div>
       </header>

@@ -11,6 +11,19 @@ export function localDateISO() {
   return `${y}-${m}-${day}`
 }
 
+async function getAccessToken() {
+  if (!supabase) return null
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.access_token ?? null
+}
+
+async function authHeaders() {
+  const token = await getAccessToken()
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+  return headers
+}
+
 function mapForecastPayload(row) {
   if (!row || typeof row.payload !== 'object' || row.payload === null) return null
   const p = row.payload
@@ -139,10 +152,14 @@ export async function deleteUserStoredReadings(userId) {
   if (errors.length) throw new Error(errors.join('; '))
 }
 
-// ─── Backend API (Express + OpenAI) ───────────────────────
+// ─── Backend API (Express) — требуют авторизации ──────────
 
 export async function fetchAIPrediction(birthDate) {
-  const res = await fetch(`${API_BASE}/api/prediction?birthDate=${encodeURIComponent(birthDate)}`)
+  const headers = await authHeaders()
+  const res = await fetch(
+    `${API_BASE}/api/prediction?birthDate=${encodeURIComponent(birthDate)}`,
+    { headers },
+  )
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw new Error(body.error || `Ошибка сервера: ${res.status}`)
@@ -150,26 +167,16 @@ export async function fetchAIPrediction(birthDate) {
   return res.json()
 }
 
-export async function createSubscriber(email, birthDate) {
+export async function createSubscriber(birthDate) {
+  const headers = await authHeaders()
   const res = await fetch(`${API_BASE}/api/subscribers`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, birthDate }),
+    headers,
+    body: JSON.stringify({ birthDate }),
   })
   if (!res.ok) {
     const body = await res.json().catch(() => ({}))
     throw new Error(body.error || `Ошибка сервера: ${res.status}`)
   }
   return res.json()
-}
-
-export async function fetchSubscriber(email) {
-  const res = await fetch(`${API_BASE}/api/subscribers?email=${encodeURIComponent(email)}`)
-  if (res.status === 404) return null
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
-  }
-  const data = await res.json()
-  return data.subscriber
 }

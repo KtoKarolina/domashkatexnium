@@ -22,6 +22,9 @@ star-oracle/backend/node_modules/
 star-oracle/backend/.env
 star-oracle/backend/.env.server
 
+# Frontend env
+star-oracle/frontend/.env
+
 # General env
 .env
 .env.local
