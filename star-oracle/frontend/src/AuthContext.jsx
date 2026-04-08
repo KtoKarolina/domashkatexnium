@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!isSupabaseConfigured || !supabase) {
-      setError('Не заданы SUPABASE_URL и SUPABASE_ANON_KEY. Создайте файл .env (см. .env.example).')
+      setError('Не заданы VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY. Создайте файл .env (см. .env.example).')
       setLoading(false)
       return
     }
@@ -28,18 +28,11 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe()
   }, [])
 
+  const clearAuthActionError = useCallback(() => setAuthActionError(null), [])
+
   const register = useCallback(async (email, password) => {
     if (!supabase) return
     setAuthActionError(null)
-
-    if (!email || !password) {
-      setAuthActionError('Введите email и пароль.')
-      return
-    }
-    if (password.length < 8) {
-      setAuthActionError('Пароль должен содержать минимум 8 символов.')
-      return
-    }
 
     const { data, error: err } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
@@ -65,18 +58,13 @@ export function AuthProvider({ children }) {
     if (!supabase) return
     setAuthActionError(null)
 
-    if (!email || !password) {
-      setAuthActionError('Введите email и пароль.')
-      return
-    }
-
     const { data, error: err } = await supabase.auth.signInWithPassword({
       email: email.trim().toLowerCase(),
       password,
     })
 
     if (err) {
-      setAuthActionError(err.message)
+      setAuthActionError('Неверный email или пароль')
       return
     }
 
@@ -98,6 +86,7 @@ export function AuthProvider({ children }) {
     loading,
     error,
     authActionError,
+    clearAuthActionError,
     register,
     login,
     logout,

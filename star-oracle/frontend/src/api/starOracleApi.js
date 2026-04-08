@@ -24,6 +24,26 @@ async function authHeaders() {
   return headers
 }
 
+async function apiFetch(url, options = {}) {
+  const res = await fetch(url, options)
+
+  if (res.status === 401) {
+    if (supabase) await supabase.auth.signOut()
+    throw new Error('Сессия истекла. Войдите снова.')
+  }
+
+  if (res.status === 403) {
+    throw new Error('Нет прав')
+  }
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    throw new Error(body.message || `Ошибка сервера: ${res.status}`)
+  }
+
+  return res.json()
+}
+
 function mapForecastPayload(row) {
   if (!row || typeof row.payload !== 'object' || row.payload === null) return null
   const p = row.payload
@@ -117,67 +137,42 @@ export async function upsertPrimaryBirth(userId, { date, time, city }) {
 
 export async function upsertProfileContacts(userId, { email, telegram }) {
   const headers = await authHeaders()
-  const res = await fetch(`${API_BASE}/api/profile`, {
+  return apiFetch(`${API_BASE}/api/profile`, {
     method: 'PUT',
     headers,
     body: JSON.stringify({ email, telegram }),
   })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
-  }
-  return res.json()
 }
 
 export async function fetchProfileRow(userId) {
   const headers = await authHeaders()
-  const res = await fetch(`${API_BASE}/api/profile`, { headers })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
-  }
-  const json = await res.json()
+  const json = await apiFetch(`${API_BASE}/api/profile`, { headers })
   return json.profile
 }
 
 export async function deleteUserStoredReadings(userId) {
-  assertSupabaseConfigured()
   const headers = await authHeaders()
-  const res = await fetch(`${API_BASE}/api/user/stored-readings`, {
+  return apiFetch(`${API_BASE}/api/user/stored-readings`, {
     method: 'DELETE',
     headers,
   })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
-  }
 }
 
-// ─── Backend API (Express) — требуют авторизации ──────────
+// ─── Backend API (Express) ────────────────────────────────
 
 export async function fetchAIPrediction(birthDate) {
   const headers = await authHeaders()
-  const res = await fetch(
+  return apiFetch(
     `${API_BASE}/api/prediction?birthDate=${encodeURIComponent(birthDate)}`,
     { headers },
   )
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
-  }
-  return res.json()
 }
 
-export async function createSubscriber(birthDate) {
+export async function createSubscriber(email, birthDate) {
   const headers = await authHeaders()
-  const res = await fetch(`${API_BASE}/api/subscribers`, {
+  return apiFetch(`${API_BASE}/api/subscribers`, {
     method: 'POST',
     headers,
-    body: JSON.stringify({ birthDate }),
+    body: JSON.stringify({ email, birthDate }),
   })
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(body.error || `Ошибка сервера: ${res.status}`)
-  }
-  return res.json()
 }

@@ -2,8 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
-import { AuthProvider, useAuth } from './AuthContext.jsx'
-import { EmailLoginForm } from './EmailLoginForm.jsx'
+import { AuthProvider } from './AuthContext.jsx'
 import './index.css'
 
 class RootErrorBoundary extends React.Component {
@@ -29,42 +28,12 @@ class RootErrorBoundary extends React.Component {
   }
 }
 
-function AppGate() {
-  const { loading, error, user } = useAuth()
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-cosmic-950 px-4 text-center text-lg text-star-gold">
-        Загрузка…
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-cosmic-950 px-4 text-center text-rose-400">
-        <p>
-          Ошибка: {error}
-          <br />
-          <span className="mt-2 block text-sm text-purple-300">Проверьте .env и ключи в Supabase.</span>
-        </p>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return <EmailLoginForm />
-  }
-
-  return <App />
-}
-
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <RootErrorBoundary>
       <BrowserRouter>
         <AuthProvider>
-          <AppGate />
+          <App />
         </AuthProvider>
       </BrowserRouter>
     </RootErrorBoundary>
