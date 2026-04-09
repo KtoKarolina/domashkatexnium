@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit'
 import { createClient } from '@supabase/supabase-js'
 import OpenAI from 'openai'
 import { getZodiacSign } from './zodiac.js'
+import { generateLocalForecast } from './local-forecast.js'
 import { apiError, authMiddleware, requireRole } from './middleware.js'
 import {
   validateEmail, validatePassword, validateBirthDate,
@@ -46,7 +47,9 @@ const supabaseAnon = createClient(
   process.env.SUPABASE_ANON_KEY,
 )
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+// Без ключа OpenAI SDK падает при импорте клиента — на Railway часто ключ не задан
+const openaiApiKey = process.env.OPENAI_API_KEY?.trim()
+const openai = openaiApiKey ? new OpenAI({ apiKey: openaiApiKey }) : null
 
 // ─── Rate limiter для /api/prediction ─────────────────────
 const predictionLimiter = rateLimit({
@@ -392,33 +395,44 @@ app.get(
         })
       }
 
-      const todayFormatted = new Date().toLocaleDateString('ru-RU', {
-        day: 'numeric', month: 'long', year: 'numeric',
-      })
+      let prediction
+      let luckyNumber
+      let color
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
-        temperature: 0.9,
-        max_tokens: 400,
-        messages: [
-          {
-            role: 'system',
-            content:
-              'Ты — ведический астролог. Отвечай на русском. ' +
-              'Дай краткий персональный гороскоп на сегодня (3–5 предложений). ' +
-              'Тон: тёплый, поддерживающий, без негатива. ' +
-              'Не упоминай, что ты ИИ.',
-          },
-          {
-            role: 'user',
-            content: `Знак зодиака: ${sign.name} (${sign.nameEn}). Дата: ${todayFormatted}. Дай гороскоп на сегодня.`,
-          },
-        ],
-      })
+      if (openai) {
+        const todayFormatted = new Date().toLocaleDateString('ru-RU', {
+          day: 'numeric', month: 'long', year: 'numeric',
+        })
 
-      const prediction = completion.choices[0]?.message?.content?.trim() || ''
-      const luckyNumber = randomInt(1, 99)
-      const color = COLORS[randomInt(0, COLORS.length - 1)]
+        const completion = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          temperature: 0.9,
+          max_tokens: 400,
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Ты — ведический астролог. Отвечай на русском. ' +
+                'Дай краткий персональный гороскоп на сегодня (3–5 предложений). ' +
+                'Тон: тёплый, поддерживающий, без негатива. ' +
+                'Не упоминай, что ты ИИ.',
+            },
+            {
+              role: 'user',
+              content: `Знак зодиака: ${sign.name} (${sign.nameEn}). Дата: ${todayFormatted}. Дай гороскоп на сегодня.`,
+            },
+          ],
+        })
+
+        prediction = completion.choices[0]?.message?.content?.trim() || ''
+        luckyNumber = randomInt(1, 99)
+        color = COLORS[randomInt(0, COLORS.length - 1)]
+      } else {
+        const local = generateLocalForecast(birthDate, today)
+        prediction = local.mainText
+        luckyNumber = local.luckyNumber
+        color = COLORS[randomInt(0, COLORS.length - 1)]
+      }
 
       await supabase.from('predictions').upsert(
         { sign: sign.name, prediction, lucky_number: luckyNumber, color, date: today },
