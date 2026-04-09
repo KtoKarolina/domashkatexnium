@@ -251,8 +251,24 @@ export function startBot() {
     }
   })
 
-  bot.start()
-  log.info('BOT', 'Telegram bot started (long-polling)')
+  // Не await — иначе Express не «выйдет» из listen. Ошибки старта/падения polling — в .catch
+  bot
+    .start({
+      onStart: (info) => {
+        log.info('BOT', `Long-polling активен: @${info.username}`)
+      },
+    })
+    .catch((err) => {
+      const msg = err?.message || String(err)
+      log.error('BOT', 'Ошибка long-polling (бот не получает сообщения)', msg)
+      if (msg.includes('409') || msg.toLowerCase().includes('conflict')) {
+        log.error(
+          'BOT',
+          'Конфликт 409: другой процесс уже опрашивает этого бота. Остановите второй экземпляр (локальный сервер, второй деплой, тестовый скрипт).',
+        )
+      }
+    })
+
   return bot
 }
 
