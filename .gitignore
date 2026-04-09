@@ -16,6 +16,10 @@ Thumbs.db
 star-oracle/frontend/node_modules/
 star-oracle/frontend/dist/
 star-oracle/dist/
+star-oracle/frontend/test-results/
+star-oracle/frontend/playwright-report/
+star-oracle/frontend/blob-report/
+star-oracle/frontend/playwright/.cache/
 
 # Backend
 star-oracle/backend/node_modules/
