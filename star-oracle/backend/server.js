@@ -449,9 +449,11 @@ app.use((err, _req, res, _next) => {
 
 // ─── Start ────────────────────────────────────────────────
 
-const PORT = process.env.PORT || 3001
-app.listen(PORT, () => {
-  log.info('SERVER', `Star Oracle backend → http://localhost:${PORT}`)
+const PORT = Number(process.env.PORT) || 3001
+// 0.0.0.0 — нужно для Docker и облака; иначе контейнер не примет внешний трафик
+const HOST = process.env.LISTEN_HOST || '0.0.0.0'
+app.listen(PORT, HOST, () => {
+  log.info('SERVER', `Star Oracle backend → http://${HOST}:${PORT}`)
 
   startBot()
   scheduleDailySend()
