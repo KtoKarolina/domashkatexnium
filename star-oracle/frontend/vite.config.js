@@ -8,6 +8,6 @@ export default defineConfig({
   server: {
     host: '127.0.0.1',
     port: Number(process.env.E2E_PORT || process.env.VITE_PORT) || 5173,
-    strictPort: true,
+    strictPort: Boolean(process.env.E2E_PORT),
   },
 })
