@@ -78,8 +78,11 @@ export function OnboardingPage() {
         <Card className="max-w-lg">
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div>
-              <label className="block text-sm text-purple-200">Дата *</label>
+              <label htmlFor="onboarding-birth-date" className="block text-sm text-purple-200">
+                Дата *
+              </label>
               <input
+                id="onboarding-birth-date"
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
@@ -89,8 +92,11 @@ export function OnboardingPage() {
               <FieldError message={showE.date} />
             </div>
             <div>
-              <label className="block text-sm text-purple-200">Время</label>
+              <label htmlFor="onboarding-birth-time" className="block text-sm text-purple-200">
+                Время
+              </label>
               <input
+                id="onboarding-birth-time"
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
@@ -98,8 +104,11 @@ export function OnboardingPage() {
               />
             </div>
             <div>
-              <label className="block text-sm text-purple-200">Город</label>
+              <label htmlFor="onboarding-birth-city" className="block text-sm text-purple-200">
+                Город
+              </label>
               <input
+                id="onboarding-birth-city"
                 type="text"
                 placeholder="Например, Москва"
                 value={city}

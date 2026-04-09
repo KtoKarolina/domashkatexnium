@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 /**
  * База: http://localhost:5173 (порт без прав администратора).
  * Другой порт: E2E_PORT=8080 npx playwright test
- * Вход e2e: в Supabase должен быть подтверждённый пользователь (по умолчанию test@example.com / password123).
+ * Setup вызывает POST /api/dev/e2e-ensure-user на бэкенде (порт 3001) — для локали поднимается webServer.
  */
 const PORT = process.env.E2E_PORT || '5173'
 const hostURL = `http://127.0.0.1:${PORT}`
@@ -13,10 +13,11 @@ const hostURL = `http://127.0.0.1:${PORT}`
  */
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: true,
+  /** Один общий e2e-пользователь и Supabase-сессия — параллельные воркеры дают зависания на birth_profiles. */
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   reporter: 'list',
   outputDir: 'test-results',
   use: {
@@ -29,6 +30,8 @@ export default defineConfig({
     {
       name: 'e2e',
       testIgnore: /auth\.setup\.js/,
+      /** Supabase + /api/prediction нередко >30s при холодном старте. */
+      timeout: 120_000,
       use: {
         ...devices['Desktop Chrome'],
         storageState: '.auth/user.json',
@@ -36,12 +39,23 @@ export default defineConfig({
       dependencies: ['setup'],
     },
   ],
-  webServer: {
-    command: `npx vite --host 127.0.0.1 --port ${PORT} --strictPort`,
-    url: hostURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 180_000,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  },
+  webServer: [
+    {
+      command: 'npm start',
+      cwd: '../backend',
+      url: 'http://127.0.0.1:3001/api/health',
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+    {
+      command: `npx vite --host 127.0.0.1 --port ${PORT} --strictPort`,
+      url: hostURL,
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+      stdout: 'pipe',
+      stderr: 'pipe',
+    },
+  ],
 })

@@ -15,6 +15,7 @@ import {
 import { startBot } from './telegram.js'
 import { scheduleDailySend } from './daily-send.js'
 import { log } from './logger.js'
+import { ensureE2eTestUser, getE2EEndpointSecret } from './e2e-ensure-user.js'
 
 const app = express()
 app.use(cors())
@@ -450,6 +451,30 @@ app.get(
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() })
+})
+
+// ─── E2E: создать/обновить тестового пользователя (только с секретом) ──
+
+app.post('/api/dev/e2e-ensure-user', express.json(), async (req, res) => {
+  const expected = getE2EEndpointSecret()
+  if (expected == null) {
+    return res.status(404).json({ message: 'Not found' })
+  }
+  if (req.headers['x-e2e-secret'] !== expected) {
+    return res.status(401).json({ message: 'Unauthorized' })
+  }
+  const email = (req.body?.email || 'test@example.com').trim().toLowerCase()
+  const password = req.body?.password || 'password123'
+  const emailErr = validateEmail(email)
+  if (emailErr) return apiError(res, 400, emailErr)
+  const passErr = validatePassword(password)
+  if (passErr) return apiError(res, 400, passErr)
+  try {
+    await ensureE2eTestUser(supabase, email, password)
+    return res.json({ ok: true })
+  } catch (err) {
+    return internalError(res, 'POST /api/dev/e2e-ensure-user', err)
+  }
 })
 
 // ─── Глобальный обработчик ошибок ─────────────────────────

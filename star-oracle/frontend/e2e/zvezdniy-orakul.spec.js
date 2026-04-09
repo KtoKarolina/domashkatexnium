@@ -4,7 +4,8 @@ test.describe('Ключевые сценарии (десктоп)', () => {
   test('пользователь вводит дату рождения, сохраняет и видит гороскоп: знак, текст, число и цвет', async ({
     page,
   }) => {
-    await page.goto('/onboarding', { waitUntil: 'networkidle' })
+    await page.goto('/onboarding', { waitUntil: 'domcontentloaded' })
+    await page.getByLabel('Дата *').waitFor({ state: 'visible', timeout: 60_000 })
 
     await page.getByLabel('Дата *').fill('1995-07-15')
     await page.getByLabel(/Город/i).fill('Москва')
@@ -15,7 +16,7 @@ test.describe('Ключевые сценарии (десктоп)', () => {
     await page.goto('/forecast', { waitUntil: 'domcontentloaded' })
 
     await expect(page.getByRole('heading', { name: /Сегодня/i })).toBeVisible({ timeout: 15_000 })
-    await expect(page.getByText(/🍀\s*Число|Число дня/i).first()).toBeVisible({ timeout: 20_000 })
+    await expect(page.getByText(/🍀\s*Число|Число дня/i).first()).toBeVisible({ timeout: 90_000 })
     const aiHeading = page.getByRole('heading', { name: /AI-прогноз/i })
     if (await aiHeading.isVisible().catch(() => false)) {
       await expect(aiHeading).toContainText(/Овен|Телец|Близнецы|Рак|Лев|Дева|Весы|Скорпион|Стрелец|Козерог|Водолей|Рыбы/i)

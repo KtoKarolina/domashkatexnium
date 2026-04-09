@@ -1,6 +1,14 @@
 import { test, expect, devices } from '@playwright/test'
 
-test.use(devices['iPhone 13'])
+/** Эмуляция iPhone без WebKit — на окружении может быть только Chromium. */
+const iphone13 = devices['iPhone 13']
+test.use({
+  userAgent: iphone13.userAgent,
+  viewport: iphone13.viewport,
+  deviceScaleFactor: iphone13.deviceScaleFactor,
+  isMobile: iphone13.isMobile,
+  hasTouch: iphone13.hasTouch,
+})
 
 test.describe('Мобильный: сайт ведёт себя как на компьютере', () => {
   test('форма даты, кнопка сохранения и переход к прогнозу работают', async ({ page }) => {
