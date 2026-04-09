@@ -20,6 +20,7 @@ star-oracle/frontend/test-results/
 star-oracle/frontend/playwright-report/
 star-oracle/frontend/blob-report/
 star-oracle/frontend/playwright/.cache/
+star-oracle/frontend/.auth/
 
 # Backend
 star-oracle/backend/node_modules/

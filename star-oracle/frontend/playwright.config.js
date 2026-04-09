@@ -1,6 +1,14 @@
 import { defineConfig, devices } from '@playwright/test'
 
 /**
+ * База: http://localhost:5173 (порт без прав администратора).
+ * Другой порт: E2E_PORT=8080 npx playwright test
+ * Вход e2e: в Supabase должен быть подтверждённый пользователь (по умолчанию test@example.com / password123).
+ */
+const PORT = process.env.E2E_PORT || '5173'
+const hostURL = `http://127.0.0.1:${PORT}`
+
+/**
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
@@ -11,15 +19,24 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: `http://localhost:${PORT}`,
     trace: 'on-first-retry',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'setup', testMatch: /auth\.setup\.js/, timeout: 120_000 },
+    {
+      name: 'e2e',
+      testIgnore: /auth\.setup\.js/,
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: '.auth/user.json',
+      },
+      dependencies: ['setup'],
+    },
   ],
   webServer: {
-    command: 'npx vite --host 127.0.0.1 --port 5173 --strictPort',
-    url: 'http://127.0.0.1:5173',
+    command: `npx vite --host 127.0.0.1 --port ${PORT} --strictPort`,
+    url: hostURL,
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     stdout: 'pipe',
