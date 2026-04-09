@@ -18,9 +18,11 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'list',
+  outputDir: 'test-results',
   use: {
     baseURL: `http://localhost:${PORT}`,
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
   projects: [
     { name: 'setup', testMatch: /auth\.setup\.js/, timeout: 120_000 },
