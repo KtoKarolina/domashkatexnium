@@ -1,12 +1,13 @@
 import { log } from './logger.js'
 
-/** Секрет заголовка x-e2e-secret. В production только E2E_SETUP_SECRET; локально — fallback, если переменная не задана. */
+/**
+ * Секрет заголовка x-e2e-secret. Только из E2E_SETUP_SECRET (без значения в коде).
+ * При пустом значении или DISABLE_E2E_DEV_ENDPOINT=1 эндпоинт выключен (null).
+ */
 export function getE2EEndpointSecret() {
-  const fromEnv = process.env.E2E_SETUP_SECRET?.trim()
-  if (fromEnv) return fromEnv
-  if (process.env.NODE_ENV === 'production') return null
   if (process.env.DISABLE_E2E_DEV_ENDPOINT === '1') return null
-  return 'local-e2e-star-oracle'
+  const fromEnv = process.env.E2E_SETUP_SECRET?.trim()
+  return fromEnv || null
 }
 
 /**

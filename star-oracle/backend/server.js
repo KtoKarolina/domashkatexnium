@@ -17,8 +17,51 @@ import { scheduleDailySend } from './daily-send.js'
 import { log } from './logger.js'
 import { ensureE2eTestUser, getE2EEndpointSecret } from './e2e-ensure-user.js'
 
+/** Локальная разработка (Vite / preview) — не используются в production, если задан CORS_ORIGINS. */
+const CORS_DEV_DEFAULTS = [
+  'http://127.0.0.1:5173',
+  'http://localhost:5173',
+  'http://127.0.0.1:4173',
+  'http://localhost:4173',
+  'http://127.0.0.1:3000',
+  'http://localhost:3000',
+]
+
+function getCorsAllowedList() {
+  const raw = process.env.CORS_ORIGINS?.trim()
+  if (raw) {
+    return raw.split(',').map((o) => o.trim()).filter(Boolean)
+  }
+  if (process.env.NODE_ENV === 'production') {
+    return []
+  }
+  return CORS_DEV_DEFAULTS
+}
+
 const app = express()
-app.use(cors())
+/** За reverse proxy (Railway и т.д.) — корректный IP для rate limit и логов. */
+app.set('trust proxy', 1)
+if (process.env.NODE_ENV === 'production' && !process.env.CORS_ORIGINS?.trim()) {
+  log.warn('CORS', 'CORS_ORIGINS не задан — кросс-доменные запросы с браузера будут отклонены. Укажите URL фронтенда(ов), разделив запятыми.')
+}
+app.use(
+  cors({
+    origin(origin, callback) {
+      const allowed = getCorsAllowedList()
+      if (!origin) {
+        return callback(null, true)
+      }
+      if (allowed.length === 0) {
+        return callback(null, false)
+      }
+      if (allowed.includes(origin)) {
+        return callback(null, true)
+      }
+      log.warn('CORS', 'Отклонён Origin:', origin)
+      return callback(null, false)
+    },
+  }),
+)
 app.use(express.json())
 
 // ─── Логирование HTTP-запросов и ответов ─────────────────
@@ -61,6 +104,25 @@ const predictionLimiter = rateLimit({
   message: { message: 'Слишком много запросов. Попробуйте через минуту.' },
 })
 
+/** Тело ответа при 429 (express-rate-limit отдаёт status 429). */
+const authRateLimitMessage = {
+  message:
+    'Слишком много запросов: не более 10 попыток за 15 минут с одного IP. Подождите и повторите позже.',
+}
+
+function createAuthRouteLimiter() {
+  return rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: authRateLimitMessage,
+  })
+}
+
+const authLoginLimiter = createAuthRouteLimiter()
+const authRegisterLimiter = createAuthRouteLimiter()
+
 // ─── Helpers ──────────────────────────────────────────────
 
 function todayISO() {
@@ -86,7 +148,7 @@ function internalError(res, logPrefix, err) {
 // AUTH — открытые маршруты
 // ═══════════════════════════════════════════════════════════
 
-app.post('/api/auth/register', requireBody('email', 'password'), async (req, res) => {
+app.post('/api/auth/register', authRegisterLimiter, requireBody('email', 'password'), async (req, res) => {
   try {
     const { email, password } = req.body
 
@@ -127,7 +189,7 @@ app.post('/api/auth/register', requireBody('email', 'password'), async (req, res
   }
 })
 
-app.post('/api/auth/login', requireBody('email', 'password'), async (req, res) => {
+app.post('/api/auth/login', authLoginLimiter, requireBody('email', 'password'), async (req, res) => {
   try {
     const { email, password } = req.body
 
@@ -463,8 +525,13 @@ app.post('/api/dev/e2e-ensure-user', express.json(), async (req, res) => {
   if (req.headers['x-e2e-secret'] !== expected) {
     return res.status(401).json({ message: 'Unauthorized' })
   }
-  const email = (req.body?.email || 'test@example.com').trim().toLowerCase()
-  const password = req.body?.password || 'password123'
+  const emailRaw = typeof req.body?.email === 'string' ? req.body.email : ''
+  const passwordRaw = typeof req.body?.password === 'string' ? req.body.password : ''
+  if (!emailRaw.trim() || !passwordRaw) {
+    return apiError(res, 400, 'Укажите email и password в теле запроса')
+  }
+  const email = emailRaw.trim().toLowerCase()
+  const password = passwordRaw
   const emailErr = validateEmail(email)
   if (emailErr) return apiError(res, 400, emailErr)
   const passErr = validatePassword(password)
