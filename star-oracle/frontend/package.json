@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:guest": "vite --mode guest",
     "build": "vite build",
+    "build:guest": "vite build --mode guest",
     "preview": "vite preview",
     "dev:localhost": "vite",
     "test": "vitest run",

@@ -5,6 +5,8 @@ import { useAuth } from '../AuthContext.jsx'
 import { Card } from '../components/Card.jsx'
 import { DataState } from '../components/DataState.jsx'
 import { PageHeading } from '../components/PageHeading.jsx'
+import { generateDailyForecast } from '../forecastGenerator.js'
+import { readGuestBirth } from '../utils/guestBirth.js'
 import { readProfilePrefs } from '../utils/profilePrefs.js'
 
 export function ForecastPage() {
@@ -51,6 +53,28 @@ export function ForecastPage() {
     }
   }, [user?.id])
 
+  useEffect(() => {
+    if (user?.id) return
+    let cancelled = false
+    const guest = readGuestBirth()
+    if (!guest?.date) {
+      setState({ loading: false, error: null, forecast: null })
+      setAi({ loading: false, error: null, data: null })
+      return () => {
+        cancelled = true
+      }
+    }
+    const today = api.localDateISO()
+    const forecast = generateDailyForecast(guest.date, today)
+    if (!cancelled) {
+      setState({ loading: false, error: null, forecast })
+      setAi({ loading: false, error: null, data: null })
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [user?.id, location.pathname])
+
   const today = new Date().toLocaleDateString('ru-RU', {
     weekday: 'long',
     day: 'numeric',
@@ -85,7 +109,7 @@ export function ForecastPage() {
           <>
             <p className="mb-4 text-xs text-star-rose/90 md:text-sm">{f.vedicHint}</p>
 
-            {ai.data?.prediction ? (
+            {user?.id && ai.data?.prediction ? (
               <Card className="mb-5 border-star-gold/25">
                 <h3 className="font-display mb-2 text-base text-star-gold">
                   ✨ AI-прогноз · {ai.data.sign}
@@ -94,11 +118,15 @@ export function ForecastPage() {
                   {ai.data.prediction}
                 </p>
                 <div className="mt-3 flex flex-wrap gap-3 text-xs text-purple-200">
-                  <span>🍀 Число: <strong className="text-star-gold">{ai.data.luckyNumber}</strong></span>
-                  <span>🎨 Цвет: <strong className="text-star-gold">{ai.data.color}</strong></span>
+                  <span>
+                    🍀 Число: <strong className="text-star-gold">{ai.data.luckyNumber}</strong>
+                  </span>
+                  <span>
+                    🎨 Цвет: <strong className="text-star-gold">{ai.data.color}</strong>
+                  </span>
                 </div>
               </Card>
-            ) : ai.loading ? (
+            ) : user?.id && ai.loading ? (
               <Card className="mb-5">
                 <p className="text-purple-200">✨ Загрузка AI-прогноза…</p>
               </Card>
@@ -147,6 +175,16 @@ export function ForecastPage() {
                 </Card>
               )}
             </div>
+
+            {!user?.id ? (
+              <p className="mt-6 text-center text-xs text-purple-300">
+                Вошли в аккаунт?{' '}
+                <NavLink to="/login" className="text-star-gold underline">
+                  Войти
+                </NavLink>
+                , чтобы сохранить дату в облаке и получить AI-прогноз.
+              </p>
+            ) : null}
           </>
         ) : null}
       </DataState>

@@ -42,7 +42,7 @@ export function Layout() {
             <NavLink to="/legal" className={linkClass}>
               📋 Юр.
             </NavLink>
-            {user && (
+            {user ? (
               <button
                 type="button"
                 onClick={logout}
@@ -50,6 +50,15 @@ export function Layout() {
               >
                 Выйти
               </button>
+            ) : (
+              <>
+                <NavLink to="/login" className={linkClass}>
+                  Войти
+                </NavLink>
+                <NavLink to="/register" className={linkClass}>
+                  Регистрация
+                </NavLink>
+              </>
             )}
           </nav>
         </div>

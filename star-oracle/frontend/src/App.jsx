@@ -1,6 +1,5 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout.jsx'
-import { RequireAuth } from './components/RequireAuth.jsx'
 import { ForecastPage } from './pages/ForecastPage.jsx'
 import { HomePage } from './pages/HomePage.jsx'
 import { LegalPage } from './pages/LegalPage.jsx'
@@ -16,14 +15,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
-      <Route
-        path="/"
-        element={
-          <RequireAuth>
-            <Layout />
-          </RequireAuth>
-        }
-      >
+      <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
         <Route path="onboarding" element={<OnboardingPage />} />
         <Route path="forecast" element={<ForecastPage />} />

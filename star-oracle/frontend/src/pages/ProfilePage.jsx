@@ -4,30 +4,30 @@ import * as api from '../api/starOracleApi.js'
 import { useAuth } from '../AuthContext.jsx'
 import { Card } from '../components/Card.jsx'
 import { PageHeading } from '../components/PageHeading.jsx'
+import { clearGuestBirth, readGuestBirth } from '../utils/guestBirth.js'
 import { clearProfilePrefs, persistProfilePrefs, readProfilePrefs } from '../utils/profilePrefs.js'
 
 export function ProfilePage() {
   const { user } = useAuth()
   const [birth, setBirth] = useState(null)
-  const [profileRow, setProfileRow] = useState(null)
   const [showLucky, setShowLucky] = useState(true)
   const [showAvoid, setShowAvoid] = useState(true)
   const [loadState, setLoadState] = useState({ loading: true, error: null })
   const [clearState, setClearState] = useState({ loading: false, error: null })
 
   useEffect(() => {
-    if (!user?.id) return
+    if (!user?.id) {
+      setBirth(readGuestBirth())
+      setLoadState({ loading: false, error: null })
+      return
+    }
     let cancelled = false
     ;(async () => {
       setLoadState({ loading: true, error: null })
       try {
-        const [b, pr] = await Promise.all([
-          api.fetchPrimaryBirth(user.id),
-          api.fetchProfileRow(user.id),
-        ])
+        const b = await api.fetchPrimaryBirth(user.id)
         if (cancelled) return
         setBirth(b)
-        setProfileRow(pr)
       } catch (e) {
         if (!cancelled) setLoadState({ loading: false, error: e?.message ?? String(e) })
         return
@@ -46,12 +46,25 @@ export function ProfilePage() {
   }, [])
 
   async function clearData() {
-    if (!user?.id) return
+    if (user?.id) {
+      setClearState({ loading: true, error: null })
+      try {
+        await api.deleteUserStoredReadings(user.id)
+        setBirth(null)
+        clearProfilePrefs()
+        setShowLucky(true)
+        setShowAvoid(true)
+        setClearState({ loading: false, error: null })
+      } catch (e) {
+        setClearState({ loading: false, error: e?.message ?? String(e) })
+      }
+      return
+    }
+
     setClearState({ loading: true, error: null })
     try {
-      await api.deleteUserStoredReadings(user.id)
+      clearGuestBirth()
       setBirth(null)
-      setProfileRow(null)
       clearProfilePrefs()
       setShowLucky(true)
       setShowAvoid(true)
@@ -61,12 +74,24 @@ export function ProfilePage() {
     }
   }
 
+  const subtitle = user?.id
+    ? 'Даты и прогнозы в Supabase; переключатели ниже — только в браузере.'
+    : 'Вы не вошли в аккаунт: дата хранится только в этом браузере. Войдите, чтобы синхронизировать с облаком.'
+
   return (
     <div>
-      <PageHeading
-        title="⚙️ Профиль"
-        subtitle="Даты и прогнозы в Supabase; переключатели ниже — только в браузере."
-      />
+      <PageHeading title="⚙️ Профиль" subtitle={subtitle} />
+      {!user?.id ? (
+        <p className="mb-4 text-sm text-purple-200">
+          <NavLink to="/login" className="text-violet-300 underline">
+            Войти
+          </NavLink>
+          {' · '}
+          <NavLink to="/register" className="text-violet-300 underline">
+            Регистрация
+          </NavLink>
+        </p>
+      ) : null}
       {loadState.loading ? <p className="mb-4 text-purple-200">Загрузка…</p> : null}
       {loadState.error ? (
         <p className="mb-4 text-rose-400">Ошибка загрузки: {loadState.error}</p>
@@ -136,7 +161,11 @@ export function ProfilePage() {
         onClick={clearData}
         className="rounded-lg border border-rose-500/50 px-4 py-2 text-sm text-rose-300 hover:bg-rose-950/50 disabled:opacity-50"
       >
-        {clearState.loading ? 'Загрузка…' : '🗑️ Удалить мои данные в Supabase'}
+        {clearState.loading
+          ? 'Загрузка…'
+          : user?.id
+            ? '🗑️ Удалить мои данные в Supabase'
+            : '🗑️ Очистить дату в этом браузере'}
       </button>
       {clearState.error ? (
         <p className="mt-2 text-sm text-rose-400">{clearState.error}</p>

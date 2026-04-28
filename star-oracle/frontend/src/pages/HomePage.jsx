@@ -16,14 +16,14 @@ export function HomePage() {
             Звёздный оракул
           </h1>
           <p className="mx-auto mt-3 max-w-md text-sm text-purple-100 md:text-base">
-            Дата рождения → прогноз на день, короткие ориентиры ✨
+            Дата рождения → ежедневный прогноз. Регистрация не обязательна — можно сразу на сайте.
           </p>
           <div className="mx-auto mt-8 max-w-lg">
             <NavLink
               to="/onboarding"
               className="block w-full rounded-2xl bg-gradient-to-r from-violet-600 to-fuchsia-600 px-6 py-5 text-center text-base font-semibold text-white shadow-lg transition hover:opacity-90"
             >
-              🎂 Ввести дату для ежедневных прогнозов
+              🎂 Указать дату и открыть прогноз
             </NavLink>
           </div>
         </div>

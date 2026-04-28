@@ -6,6 +6,7 @@ import { Card } from '../components/Card.jsx'
 import { FieldError } from '../components/FieldError.jsx'
 import { PageHeading } from '../components/PageHeading.jsx'
 import { inputClass, inputInvalid, inputNormal } from '../utils/formStyles.js'
+import { readGuestBirth, writeGuestBirth } from '../utils/guestBirth.js'
 import { validateBirthForm } from '../utils/validation.js'
 
 export function OnboardingPage() {
@@ -18,23 +19,35 @@ export function OnboardingPage() {
   const [loadBirth, setLoadBirth] = useState({ loading: true, error: null })
 
   useEffect(() => {
-    if (!user?.id) return
     let cancelled = false
     ;(async () => {
-      setLoadBirth({ loading: true, error: null })
-      try {
-        const b = await api.fetchPrimaryBirth(user.id)
-        if (cancelled) return
-        if (b) {
-          setDate(b.date || '')
-          setTime(b.time || '')
-          setCity(b.city || '')
+      if (user?.id) {
+        setLoadBirth({ loading: true, error: null })
+        try {
+          const b = await api.fetchPrimaryBirth(user.id)
+          if (cancelled) return
+          if (b) {
+            setDate(b.date || '')
+            setTime(b.time || '')
+            setCity(b.city || '')
+          }
+        } catch (e) {
+          if (!cancelled) setLoadBirth({ loading: false, error: e?.message ?? String(e) })
+          return
         }
-      } catch (e) {
-        if (!cancelled) setLoadBirth({ loading: false, error: e?.message ?? String(e) })
+        if (!cancelled) setLoadBirth({ loading: false, error: null })
         return
       }
-      if (!cancelled) setLoadBirth({ loading: false, error: null })
+
+      const g = readGuestBirth()
+      if (!cancelled) {
+        if (g) {
+          setDate(g.date || '')
+          setTime(g.time || '')
+          setCity(g.city || '')
+        }
+        setLoadBirth({ loading: false, error: null })
+      }
     })()
     return () => {
       cancelled = true
@@ -52,24 +65,32 @@ export function OnboardingPage() {
     setSubmitAttempted(true)
     setSaveState({ loading: false, error: null })
     if (!birthOk) return
-    if (!user?.id) return
-    setSaveState({ loading: true, error: null })
-    try {
-      await api.upsertPrimaryBirth(user.id, { date, time, city })
-      setSaved(true)
-      setSubmitAttempted(false)
-      setSaveState({ loading: false, error: null })
-    } catch (err) {
-      setSaveState({ loading: false, error: err?.message ?? String(err) })
+
+    if (user?.id) {
+      setSaveState({ loading: true, error: null })
+      try {
+        await api.upsertPrimaryBirth(user.id, { date, time, city })
+        setSaved(true)
+        setSubmitAttempted(false)
+        setSaveState({ loading: false, error: null })
+      } catch (err) {
+        setSaveState({ loading: false, error: err?.message ?? String(err) })
+      }
+      return
     }
+
+    writeGuestBirth({ date, time, city })
+    setSaved(true)
+    setSubmitAttempted(false)
   }
+
+  const subtitle = user?.id
+    ? 'Нужна дата. Время и город — по желанию. Сохраняется в Supabase.'
+    : 'Нужна дата. Без аккаунта данные хранятся только в этом браузере. Войти можно в любой момент — тогда дата синхронизируется с облаком.'
 
   return (
     <div>
-      <PageHeading
-        title="🎂 Дата рождения"
-        subtitle="Нужна дата. Время и город — по желанию. Сохраняется в Supabase."
-      />
+      <PageHeading title="🎂 Дата рождения" subtitle={subtitle} />
       {loadBirth.loading ? <p className="mb-4 text-purple-200">Загрузка…</p> : null}
       {loadBirth.error ? (
         <p className="mb-4 text-rose-400">Ошибка загрузки: {loadBirth.error}</p>
