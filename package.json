@@ -1,0 +1,10 @@
+{
+  "name": "domashkatexnium",
+  "private": true,
+  "description": "KARO.AI лендинг + star-oracle (monorepo без workspaces)",
+  "scripts": {
+    "test": "npm --prefix star-oracle/backend run test && npm --prefix star-oracle/frontend run test",
+    "build": "npm --prefix star-oracle/frontend run build",
+    "test:e2e": "npm --prefix star-oracle/frontend run test:e2e"
+  }
+}
