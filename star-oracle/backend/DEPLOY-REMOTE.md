@@ -29,7 +29,7 @@
 VITE_API_BASE=https://ВАШ-URL-ИЗ-RAILWAY.up.railway.app
 ```
 
-Пересоберите и задеплойте фронт (Netlify, Vercel, Cloudflare Pages и т.д.).
+Пересоберите и задеплойте фронт (Netlify, Vercel, Cloudflare Pages, **Timeweb App Platform** и т.д.). Для Timeweb см. **`star-oracle/DEPLOY-TIMEWEB.md`**.
 
 ## Проверка
 
